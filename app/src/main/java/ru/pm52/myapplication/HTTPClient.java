@@ -123,6 +123,7 @@ public class HTTPClient implements ICallbackResponse {
         @Override
         protected Boolean doInBackground(HTTPClient... httpClients) {
             try {
+//                Thread.sleep(2000);
                 HTTPClient client = httpClients[0];
                 client.send();
                 return true;

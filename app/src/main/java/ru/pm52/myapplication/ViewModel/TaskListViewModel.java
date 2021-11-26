@@ -24,6 +24,9 @@ public class TaskListViewModel extends ViewModelBase{
     private final MutableLiveData<List<TaskModel>> listTasks = new MutableLiveData<>();
     public final LiveData<List<TaskModel>> ListTasks = listTasks;
 
+    private final MutableLiveData<Boolean> isRefresh = new MutableLiveData<>();
+    public final LiveData<Boolean> IsRefresh = isRefresh;
+
     public TaskListViewModel(){
         
     }
@@ -54,6 +57,7 @@ public class TaskListViewModel extends ViewModelBase{
                 .build();
 
         client.setNameEvent("getlist").sendAsync();
+        isRefresh.postValue(true);
     }
 
     @Override
@@ -76,12 +80,12 @@ public class TaskListViewModel extends ViewModelBase{
                                 .fromJson(stringTasks, listType);
 
                         listTasks.postValue(lst);
-
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
                 }
             }
         }
+        isRefresh.postValue(false);
     }
 }

@@ -44,6 +44,7 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
     private TaskListViewModel viewModel;
 
     private boolean isNew = false;
+    private boolean isRefresh = false;
     private List<TaskModel> listTask;
 
     public TaskListFragment(@Nullable List<TaskModel> list) {
@@ -59,15 +60,15 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(TaskListViewModel.class);
-        if (savedInstanceState != null)
-            listTask = viewModel.getTaskModelList();
 
         binding = FragmentTaskListBinding.inflate(inflater, container, false);
 
         if (!isNew) {
             viewModel.refresh();
-        } else
+        } else if (savedInstanceState == null) {
             viewModel.setListTasks(listTask);
+        } else listTask = viewModel.getTaskModelList();
+
 
         binding.listTask.setAdapter(new RecycleViewAdapter(listTask, this));
 
@@ -79,11 +80,18 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
             }
         });
 
+        viewModel.IsRefresh.observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean aBoolean) {
+                if (!aBoolean)
+                    binding.swipeContainer.setRefreshing(false);
+            }
+        });
+
         binding.swipeContainer.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
                 viewModel.refresh();
-                binding.swipeContainer.setRefreshing(false);
             }
         });
 
