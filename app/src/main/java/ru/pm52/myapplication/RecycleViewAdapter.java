@@ -12,6 +12,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.SimpleDateFormat;
 import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,6 +60,9 @@ public class RecycleViewAdapter
             ActivityTaskRecycleViewItemBinding b = holder.binding;
             b.getRoot().setTag(taskModel);
             b.Name.setText(taskModel.Name);
+            SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+            b.date.setText(formatter.format(taskModel.DateTime));
+            b.number.setText(taskModel.Number);
         }
     }
 
