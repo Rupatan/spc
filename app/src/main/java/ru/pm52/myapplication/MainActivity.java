@@ -50,7 +50,7 @@ public class MainActivity extends AppCompatActivity implements Navigator {
     public void showDetails(TaskModel task) {
         getSupportFragmentManager()
                 .beginTransaction()
-                .replace(R.id.fragmentContainer, new TaskFragment())
+                .replace(R.id.fragmentContainer, new TaskFragment(task))
                 .addToBackStack(null)
                 .commit();
     }

@@ -10,6 +10,8 @@ public class TaskViewModel extends ViewModelBase {
     private MutableLiveData<TaskModel> task = new MutableLiveData<>();
     public LiveData<TaskModel> Task = task;
 
-
+    public void setTask(TaskModel taskModel){
+        task.postValue(taskModel);
+    }
 
 }
