@@ -58,9 +58,11 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        viewModel = new ViewModelProvider(this).get(TaskListViewModel.class);
+        if (savedInstanceState != null)
+            listTask = viewModel.getTaskModelList();
 
         binding = FragmentTaskListBinding.inflate(inflater, container, false);
-        viewModel = new ViewModelProvider(this).get(TaskListViewModel.class);
 
         if (!isNew) {
             viewModel.refresh();

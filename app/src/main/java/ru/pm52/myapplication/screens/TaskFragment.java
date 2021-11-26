@@ -45,6 +45,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
+import com.google.gson.GsonBuilder;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -65,18 +67,27 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
 
     private FragmentTaskBinding binding;
     private TaskViewModel viewModel;
+    @Nullable
     private TaskModel taskModel;
 
     public TaskFragment(TaskModel taskModel) {
         this.taskModel = taskModel;
     }
 
+    public TaskFragment() {
+        this(null);
+    }
 
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        binding = FragmentTaskBinding.inflate(inflater, container, false);
         viewModel = new ViewModelProvider(this).get(TaskViewModel.class);
+
+        if (savedInstanceState != null){
+            taskModel = viewModel.getTaskModel();
+        }
+
+        binding = FragmentTaskBinding.inflate(inflater, container, false);
 
         binding.button.setOnClickListener(this);
 
@@ -97,6 +108,12 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
         return binding.getRoot();
     }
 
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        String stringJson = new GsonBuilder().setPrettyPrinting().create().toJson(taskModel);
+        outState.putString("taskModel", stringJson);
+    }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,

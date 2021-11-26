@@ -2,9 +2,10 @@ package ru.pm52.myapplication.Model;
 
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 import java.util.Date;
 
-public class TaskModel {
+public class TaskModel implements Serializable {
 
     @SerializedName("Ссылка")
     public String Id;

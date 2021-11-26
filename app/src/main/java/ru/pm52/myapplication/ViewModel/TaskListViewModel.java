@@ -32,6 +32,10 @@ public class TaskListViewModel extends ViewModelBase{
         listTasks.postValue(list);
     }
 
+    public List<TaskModel> getTaskModelList(){
+        return listTasks.getValue();
+    }
+
     public void refresh(){
         UUID uuid = UUID.randomUUID();
         String uuidAsString = uuid.toString().replace('-', '_');

@@ -14,4 +14,8 @@ public class TaskViewModel extends ViewModelBase {
         task.postValue(taskModel);
     }
 
+    public TaskModel getTaskModel(){
+        return task.getValue();
+    }
+
 }
