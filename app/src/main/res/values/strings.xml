@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">spc</string>
+    <string name="txtUserHint">Имя пользователя...</string>
+    <string name="txtPasswordHint">Пароль...</string>
+    <string name="txtButtonEnter">Войти</string>
+
+</resources>

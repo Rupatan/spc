@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="DesignSurface">
+    <option name="filePathToZoomLevelMap">
+      <map>
+        <entry key="..\:/Users/the/AndroidStudioProjects/MyApplication8/app/src/main/res/layout/activity_main.xml" value="0.1" />
+        <entry key="..\:/Users/the/AndroidStudioProjects/MyApplication8/app/src/main/res/layout/activity_task_recycle_view_item.xml" value="0.1" />
+        <entry key="..\:/Users/the/Desktop/MyApplication8/app/src/main/res/layout/activity_main.xml" value="0.35956227201667534" />
+        <entry key="..\:/Users/the/Desktop/MyApplication8/app/src/main/res/layout/fragment_auth.xml" value="0.359375" />
+        <entry key="..\:/Users/the/Desktop/MyApplication8/app/src/main/res/layout/fragment_task_list.xml" value="0.359375" />
+        <entry key="..\:/Users/the/Desktop/pmSPC/MyApplication8/app/src/main/res/layout/activity_task_recycle_view_item.xml" value="0.1" />
+        <entry key="..\:/Users/the/Desktop/pmSPC/MyApplication8/app/src/main/res/layout/fragment_task.xml" value="0.25" />
+        <entry key="..\:/Users/the/Desktop/pmSPC/MyApplication8/app/src/main/res/layout/fragment_task_list.xml" value="0.1" />
+      </map>
+    </option>
+  </component>
+  <component name="ProjectRootManager" version="2" languageLevel="JDK_11" default="true" project-jdk-name="11" project-jdk-type="JavaSDK">
+    <output url="file://$PROJECT_DIR$/build/classes" />
+  </component>
+  <component name="ProjectType">
+    <option name="id" value="Android" />
+  </component>
+</project>
