@@ -55,9 +55,27 @@ public class AuthFragment extends FragmentBase implements View.OnClickListener {
             }
         });
 
+        viewModel.isLogin.observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean isLogin) {
+                if (!isLogin)
+                    setVisibilityLogin(false);
+            }
+        });
+
         binding.buttonEnter.setOnClickListener(this);
 
         return binding.getRoot();
+    }
+
+    private void setVisibilityLogin(boolean isLogin) {
+        if (!isLogin) {
+            binding.progressEnter.setVisibility(View.GONE);
+            binding.buttonEnter.setVisibility(View.VISIBLE);
+        } else {
+            binding.progressEnter.setVisibility(View.VISIBLE);
+            binding.buttonEnter.setVisibility(View.GONE);
+        }
     }
 
     @Override

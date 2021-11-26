@@ -2,6 +2,7 @@ package ru.pm52.myapplication;
 
 import android.os.AsyncTask;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import java.io.BufferedOutputStream;
@@ -305,6 +306,7 @@ public class HTTPClient implements ICallbackResponse {
             return new ResponseResult(responseBody, responseCode);
         }
 
+        @NonNull
         static String readStream(InputStream in) {
             BufferedReader reader = null;
             StringBuffer response = new StringBuffer();

@@ -69,9 +69,10 @@ public class AuthViewModel extends ViewModelBase {
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    _isLogin.postValue(false);
                 }
-
-//                new GsonBuilder().create().fromJson(stringJson, );
+            }else{
+                _isLogin.postValue(false);
             }
         }
     }
