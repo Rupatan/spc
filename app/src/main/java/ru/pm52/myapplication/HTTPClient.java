@@ -1,5 +1,6 @@
 package ru.pm52.myapplication;
 
+import android.graphics.Bitmap;
 import android.os.AsyncTask;
 
 import androidx.annotation.NonNull;
@@ -7,6 +8,8 @@ import androidx.annotation.Nullable;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,8 +18,11 @@ import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 public class HTTPClient implements ICallbackResponse {
 
@@ -81,6 +87,8 @@ public class HTTPClient implements ICallbackResponse {
     private INotify notify;
     @Nullable
     private String nameEvent;
+    @Nullable
+    private List<HttpFile> files;
 
     private HTTPClient(Builder builder) {
         this.urlString = builder.urlString;
@@ -92,7 +100,9 @@ public class HTTPClient implements ICallbackResponse {
         this.user = builder.user;
         this.header = builder.header;
         this.notify = builder.notify;
+
         this.nameEvent = builder.nameEvent;
+        this.files = builder.files;
     }
 
     public void send(String pathString) {
@@ -111,7 +121,8 @@ public class HTTPClient implements ICallbackResponse {
                     bodyRequest,
                     methodRequest,
                     header,
-                    5000
+                    5000,
+                    files
             );
         } catch (Exception e) {
             e.printStackTrace();
@@ -165,9 +176,19 @@ public class HTTPClient implements ICallbackResponse {
         private INotify notify;
         @Nullable
         private String nameEvent;
+        @Nullable
+        private List<HttpFile> files;
 
         public HTTPClient build() {
             return new HTTPClient(this);
+        }
+
+        public Builder addFile(HttpFile file) {
+            if (files == null)
+                files = new ArrayList<>();
+
+            files.add(file);
+            return this;
         }
 
         public Builder addHeader(String key, String value) {
@@ -201,7 +222,7 @@ public class HTTPClient implements ICallbackResponse {
         public Builder callback(Object object) {
             if (object instanceof ICallbackResponse)
                 this.callback = (ICallbackResponse) object;
-            else if(object instanceof INotify)
+            else if (object instanceof INotify)
                 this.notify = (INotify) object;
 
             return this;
@@ -253,7 +274,8 @@ public class HTTPClient implements ICallbackResponse {
                                                      @Nullable String body,
                                                      @Nullable METHOD_SEND method,
                                                      @Nullable HashMap<String, String> headers,
-                                                     @Nullable Integer connectionTimeOut) throws Exception {
+                                                     @Nullable Integer connectionTimeOut,
+                                                     @Nullable List<HttpFile> files) throws Exception {
             int responseCode = -1;
             String responseBody = "";
 
@@ -271,23 +293,107 @@ public class HTTPClient implements ICallbackResponse {
                 methodString = method.toString();
             con.setRequestMethod(methodString);
 
-            if (headers != null)
+            @Nullable String boundary = null;
+            if (files != null) {
+                UUID uuid = UUID.randomUUID();
+                String uuidAsString = uuid.toString().replaceAll("-", "");
+                boundary = "--" + uuidAsString;
+
+                if (headers == null)
+                    headers = new HashMap<>();
+
+                String val = "";
+                if (headers.containsKey("Content-Type")) {
+                    val = headers.get("Content-Type").trim();
+                    if (!val.endsWith(";"))
+                        val += ";";
+
+                    val += boundary;
+                } else {
+                    val = "multipart/form-data; boundary=" + boundary;
+                }
+                headers.put("Content-Type", val);
+            }
+
+            try {
                 for (Map.Entry<String, String> i : headers.entrySet()) {
                     con.setRequestProperty(i.getKey(), i.getValue());
                 }
-//                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            //                con.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
             int conTimeOut = 5000;
             if (connectionTimeOut != null)
                 conTimeOut = connectionTimeOut;
 
             con.setConnectTimeout(conTimeOut);
-            boolean doOutput = body != null;
+            boolean doOutput = body != null || files != null;
             con.setDoInput(true);
             con.setUseCaches(false);
             con.setDoOutput(doOutput);
-            if (doOutput) {
+            if (body != null) {
                 BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(con.getOutputStream());
                 bufferedOutputStream.write(body.getBytes(StandardCharsets.UTF_8));
+                bufferedOutputStream.flush();
+                bufferedOutputStream.close();
+            }
+
+            boolean headersIsSet = false;
+
+            if (files != null) {
+                DataOutputStream request = new DataOutputStream(
+                        con.getOutputStream());
+                String crlf = "\r\n";
+
+                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(con.getOutputStream());
+
+                byte[] crlfb = crlf.getBytes(StandardCharsets.UTF_8);
+                for (HttpFile file : files) {
+                    if (file.Data instanceof Bitmap) {
+                        Bitmap bitmap = (Bitmap) file.Data;
+                        request.writeBytes("--" + boundary + crlf);
+                        String stringContentDisposition = "Content-Disposition: form-data;";
+                        if (file.Name != null)
+                            stringContentDisposition += "name=\"" + file.Name + "\";";
+
+                        if (file.FileName != null)
+                            stringContentDisposition += "filename=\"" + file.FileName + "\"";
+
+                        //stringContentDisposition += crlf;
+
+                        bufferedOutputStream.write(stringContentDisposition.getBytes(StandardCharsets.UTF_8));
+                        bufferedOutputStream.write(crlfb);
+
+                        ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        byte[] byteArray = stream.toByteArray();
+
+                        bufferedOutputStream.write(byteArray);
+
+                        stream.flush();
+                        stream.close();
+
+//                        byte[] pixels = new byte[bitmap.getWidth() * bitmap.getHeight()];
+//                        for (int i = 0; i < bitmap.getWidth(); ++i) {
+//                            for (int j = 0; j < bitmap.getHeight(); ++j) {
+//                                pixels[i + j] = (byte) ((bitmap.getPixel(i, j) & 0x80) >> 7);
+//                            }
+//                        }
+//                        request.write(pixels);
+                    }
+                }
+
+                bufferedOutputStream.write(crlfb);
+                bufferedOutputStream.write(("--" + boundary + "--" + crlf).getBytes(StandardCharsets.UTF_8));
+
+//                request.writeBytes(crlf);
+//                request.writeBytes("--" + boundary + "--" + crlf);
+//                request.flush();
+//                request.close();
+
+                bufferedOutputStream.flush();
                 bufferedOutputStream.close();
             }
 
@@ -295,7 +401,8 @@ public class HTTPClient implements ICallbackResponse {
             try {
                 responseCode = con.getResponseCode();
                 responseBody = readStream(con.getInputStream());
-            } catch (Exception e) {
+            } catch (
+                    Exception e) {
                 responseBody = e.getMessage();
                 error = true;
                 e.printStackTrace();

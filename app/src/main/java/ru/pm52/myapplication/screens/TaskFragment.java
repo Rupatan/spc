@@ -51,12 +51,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.UUID;
 
 import ru.pm52.myapplication.BuildConfig;
 import ru.pm52.myapplication.FragmentBase;
+import ru.pm52.myapplication.HTTPClient;
+import ru.pm52.myapplication.HttpFile;
+import ru.pm52.myapplication.Model.AuthRepository;
+import ru.pm52.myapplication.Model.ModelContext;
 import ru.pm52.myapplication.Model.TaskModel;
 import ru.pm52.myapplication.R;
 import ru.pm52.myapplication.ViewModel.TaskViewModel;
@@ -83,7 +90,7 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(TaskViewModel.class);
 
-        if (savedInstanceState != null){
+        if (savedInstanceState != null) {
             taskModel = viewModel.getTaskModel();
         }
 
@@ -100,6 +107,39 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                 binding.txtDate.setText(formatter.format(taskModel.DateTime));
                 binding.txtNumber.setText(taskModel.Number);
+            }
+        });
+
+        binding.button2.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                UUID uuid = UUID.randomUUID();
+                String uuidAsString = uuid.toString().replace('-', '_');
+                AuthRepository authRepository = AuthRepository.getInstance();
+
+                HTTPClient.Builder client = new HTTPClient.Builder(ModelContext.URLBase)
+                        .addHeader("Expires", "Mon, 26 Jul 1997 05:00:00 GMT")
+                        .addHeader("Cache-Control", "no-store, no-cache, must-revalidate")
+                        .addHeader("Cache-Control", "post-check=0, pre-check=0")
+                        .addHeader("Pragma", "no-cache")
+                        .authentication(authRepository.getUsername(), authRepository.getPassword())
+                        .pathURL("mobile/tasks/upload?uid=" + uuidAsString)
+                        .method(HTTPClient.METHOD_SEND.POST)
+                        .callback(this);
+
+                for (int i = 0; i <= binding.linearPhoto.getChildCount() - 1; i++) {
+                    if (binding.linearPhoto.getChildAt(i) instanceof ImageView) {
+                        ImageView imageView = (ImageView) binding.linearPhoto.getChildAt(i);
+                        Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+                        HttpFile httpFile = new HttpFile();
+                        httpFile.FileName = i + ".jpeg";
+                        httpFile.Name = i + "file";
+                        httpFile.Data = bitmap;
+                        client.addFile(httpFile);
+                    }
+                }
+
+                client.build().setNameEvent("getlist").sendAsync();
             }
         });
 
@@ -235,7 +275,14 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
     public void addImage(Bitmap bt) {
         ImageView imageView = new ImageView(getContext());
         imageView.setPadding(2, 2, 2, 2);
-        imageView.setImageBitmap(bt);
+
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        bt.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+
+        byte[] bitmapdata = bytes.toByteArray();
+        Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapdata, 0, bitmapdata.length);
+
+        imageView.setImageBitmap(bitmap);
         imageView.setScaleType(ImageView.ScaleType.FIT_XY);
         binding.linearPhoto.addView(imageView);
     }
