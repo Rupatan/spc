@@ -2,6 +2,9 @@ package ru.pm52.myapplication;
 
 import android.graphics.Bitmap;
 import android.os.AsyncTask;
+import android.os.Build;
+import android.util.Base64;
+import android.util.Base64OutputStream;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,6 +16,7 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
@@ -333,27 +337,37 @@ public class HTTPClient implements ICallbackResponse {
             con.setDoInput(true);
             con.setUseCaches(false);
             con.setDoOutput(doOutput);
+
+            @Nullable DataOutputStream bufferedOutputStream = null;
+            @Nullable ByteArrayOutputStream baos = null;
+
             if (body != null) {
-                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(con.getOutputStream());
+
+                baos = new ByteArrayOutputStream();
+
+                bufferedOutputStream = new DataOutputStream(baos);
                 bufferedOutputStream.write(body.getBytes(StandardCharsets.UTF_8));
-                bufferedOutputStream.flush();
-                bufferedOutputStream.close();
+//                bufferedOutputStream.flush();
+//                bufferedOutputStream.close();
             }
 
             boolean headersIsSet = false;
-
-            if (files != null) {
-                DataOutputStream request = new DataOutputStream(
-                        con.getOutputStream());
+            boolean isfiles = files != null && !files.isEmpty();
+            if (isfiles) {
+//                DataOutputStream request = new DataOutputStream(
+//                        con.getOutputStream());
                 String crlf = "\r\n";
 
-                BufferedOutputStream bufferedOutputStream = new BufferedOutputStream(con.getOutputStream());
+                if (bufferedOutputStream == null) {
+                    baos = new ByteArrayOutputStream();
+                    bufferedOutputStream = new DataOutputStream(baos);
+                }
 
                 byte[] crlfb = crlf.getBytes(StandardCharsets.UTF_8);
                 for (HttpFile file : files) {
                     if (file.Data instanceof Bitmap) {
                         Bitmap bitmap = (Bitmap) file.Data;
-                        request.writeBytes("--" + boundary + crlf);
+                        bufferedOutputStream.write(("--" + boundary + crlf).getBytes(StandardCharsets.UTF_8));
                         String stringContentDisposition = "Content-Disposition: form-data;";
                         if (file.Name != null)
                             stringContentDisposition += "name=\"" + file.Name + "\";";
@@ -361,20 +375,23 @@ public class HTTPClient implements ICallbackResponse {
                         if (file.FileName != null)
                             stringContentDisposition += "filename=\"" + file.FileName + "\"";
 
-                        //stringContentDisposition += crlf;
+                        stringContentDisposition += crlf;
 
                         bufferedOutputStream.write(stringContentDisposition.getBytes(StandardCharsets.UTF_8));
                         bufferedOutputStream.write(crlfb);
 
                         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                         byte[] byteArray = stream.toByteArray();
+
+//                        byte[] encode = Base64.encode(byteArray, Base64.DEFAULT);
 
                         bufferedOutputStream.write(byteArray);
 
                         stream.flush();
                         stream.close();
 
+                        bufferedOutputStream.write(crlfb);
 //                        byte[] pixels = new byte[bitmap.getWidth() * bitmap.getHeight()];
 //                        for (int i = 0; i < bitmap.getWidth(); ++i) {
 //                            for (int j = 0; j < bitmap.getHeight(); ++j) {
@@ -385,7 +402,7 @@ public class HTTPClient implements ICallbackResponse {
                     }
                 }
 
-                bufferedOutputStream.write(crlfb);
+
                 bufferedOutputStream.write(("--" + boundary + "--" + crlf).getBytes(StandardCharsets.UTF_8));
 
 //                request.writeBytes(crlf);
@@ -393,8 +410,24 @@ public class HTTPClient implements ICallbackResponse {
 //                request.flush();
 //                request.close();
 
+//                bufferedOutputStream.flush();
+//                bufferedOutputStream.close();
+            }
+
+            if (bufferedOutputStream != null) {
                 bufferedOutputStream.flush();
                 bufferedOutputStream.close();
+//                InputStreamReader reader = new InputStreamReader();
+//                BufferedInputStream reader = new BufferedInputStream()
+                DataOutputStream outputStream = new DataOutputStream(con.getOutputStream());
+                byte[] bodyByte = baos.toByteArray();
+                if (isfiles) {
+                    byte[] encode = Base64.encode(bodyByte, Base64.DEFAULT);
+                    outputStream.write(encode);
+                } else outputStream.write(bodyByte);
+                outputStream.flush();
+                outputStream.close();
+
             }
 
             boolean error = false;
