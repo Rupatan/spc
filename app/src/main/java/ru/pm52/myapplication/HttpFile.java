@@ -1,7 +1,11 @@
 package ru.pm52.myapplication;
 
+import androidx.annotation.Nullable;
+
 public class HttpFile {
-    public String Name;
-    public String FileName;
+    @Nullable public String Name;
+    @Nullable public String FileName;
     public Object Data;
+    public String ContentType;
+
 }

@@ -342,92 +342,72 @@ public class HTTPClient implements ICallbackResponse {
             @Nullable ByteArrayOutputStream baos = null;
 
             if (body != null) {
-
                 baos = new ByteArrayOutputStream();
-
                 bufferedOutputStream = new DataOutputStream(baos);
                 bufferedOutputStream.write(body.getBytes(StandardCharsets.UTF_8));
-//                bufferedOutputStream.flush();
-//                bufferedOutputStream.close();
             }
 
             boolean headersIsSet = false;
             boolean isfiles = files != null && !files.isEmpty();
             if (isfiles) {
-//                DataOutputStream request = new DataOutputStream(
-//                        con.getOutputStream());
                 String crlf = "\r\n";
-
                 if (bufferedOutputStream == null) {
                     baos = new ByteArrayOutputStream();
                     bufferedOutputStream = new DataOutputStream(baos);
                 }
-
                 byte[] crlfb = crlf.getBytes(StandardCharsets.UTF_8);
                 for (HttpFile file : files) {
+                    bufferedOutputStream.write(("--" + boundary + crlf).getBytes(StandardCharsets.UTF_8));
+                    String stringContentDisposition = "Content-Disposition: form-data;";
+                    if (file.Name != null)
+                        stringContentDisposition += "name=\"" + file.Name + "\";";
+
+                    if (file.FileName != null)
+                        stringContentDisposition += "filename=\"" + file.FileName + "\"";
+
+                    stringContentDisposition += crlf;
+
+                    bufferedOutputStream.write(stringContentDisposition.getBytes(StandardCharsets.UTF_8));
+
+                    if (file.ContentType != null) {
+                        bufferedOutputStream.writeBytes(file.ContentType);
+                    }
+
+                    bufferedOutputStream.write(crlfb);
                     if (file.Data instanceof Bitmap) {
                         Bitmap bitmap = (Bitmap) file.Data;
-                        bufferedOutputStream.write(("--" + boundary + crlf).getBytes(StandardCharsets.UTF_8));
-                        String stringContentDisposition = "Content-Disposition: form-data;";
-                        if (file.Name != null)
-                            stringContentDisposition += "name=\"" + file.Name + "\";";
-
-                        if (file.FileName != null)
-                            stringContentDisposition += "filename=\"" + file.FileName + "\"";
-
-                        stringContentDisposition += crlf;
-
-                        bufferedOutputStream.write(stringContentDisposition.getBytes(StandardCharsets.UTF_8));
-                        bufferedOutputStream.write(crlfb);
-
                         ByteArrayOutputStream stream = new ByteArrayOutputStream();
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, stream);
                         byte[] byteArray = stream.toByteArray();
 
-//                        byte[] encode = Base64.encode(byteArray, Base64.DEFAULT);
+                        byte[] encode = Base64.encode(byteArray, Base64.DEFAULT);
 
-                        bufferedOutputStream.write(byteArray);
+                        bufferedOutputStream.write(encode);
 
                         stream.flush();
                         stream.close();
-
-                        bufferedOutputStream.write(crlfb);
-//                        byte[] pixels = new byte[bitmap.getWidth() * bitmap.getHeight()];
-//                        for (int i = 0; i < bitmap.getWidth(); ++i) {
-//                            for (int j = 0; j < bitmap.getHeight(); ++j) {
-//                                pixels[i + j] = (byte) ((bitmap.getPixel(i, j) & 0x80) >> 7);
-//                            }
-//                        }
-//                        request.write(pixels);
+                    } else if (file.Data instanceof String) {
+                        bufferedOutputStream.writeBytes((String) file.Data);
                     }
+
+                    bufferedOutputStream.write(crlfb);
+
                 }
-
-
                 bufferedOutputStream.write(("--" + boundary + "--" + crlf).getBytes(StandardCharsets.UTF_8));
-
-//                request.writeBytes(crlf);
-//                request.writeBytes("--" + boundary + "--" + crlf);
-//                request.flush();
-//                request.close();
-
-//                bufferedOutputStream.flush();
-//                bufferedOutputStream.close();
             }
 
             if (bufferedOutputStream != null) {
                 bufferedOutputStream.flush();
                 bufferedOutputStream.close();
-//                InputStreamReader reader = new InputStreamReader();
-//                BufferedInputStream reader = new BufferedInputStream()
                 DataOutputStream outputStream = new DataOutputStream(con.getOutputStream());
                 byte[] bodyByte = baos.toByteArray();
-                if (isfiles) {
-                    byte[] encode = Base64.encode(bodyByte, Base64.DEFAULT);
-                    outputStream.write(encode);
-                } else outputStream.write(bodyByte);
+//                if (isfiles) {
+//                    byte[] encode = Base64.encode(bodyByte, Base64.DEFAULT);
+//                    outputStream.write(encode);
+//                } else
+                outputStream.write(bodyByte);
                 outputStream.flush();
                 outputStream.close();
-
             }
 
             boolean error = false;

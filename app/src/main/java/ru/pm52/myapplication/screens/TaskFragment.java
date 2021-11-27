@@ -135,9 +135,15 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
                         httpFile.FileName = i + ".jpeg";
                         httpFile.Name = i + "file";
                         httpFile.Data = bitmap;
+                        httpFile.ContentType = "Content-Type: image/jpeg";
                         client.addFile(httpFile);
                     }
                 }
+
+                HttpFile objectJson = new HttpFile();
+                objectJson.ContentType = "Content-Type: application/json; charset=UTF-8";
+                objectJson.Data = "{\"data\": 123}";
+                client.addFile(objectJson);
 
                 client.build().setNameEvent("getlist").sendAsync();
             }
