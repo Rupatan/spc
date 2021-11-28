@@ -358,7 +358,11 @@ public class HTTPClient implements ICallbackResponse {
                 byte[] crlfb = crlf.getBytes(StandardCharsets.UTF_8);
                 for (HttpFile file : files) {
                     bufferedOutputStream.write(("--" + boundary + crlf).getBytes(StandardCharsets.UTF_8));
-                    String stringContentDisposition = "Content-Disposition: form-data;";
+                    String stringContentDisposition = null;
+                    if (file.ContentDesposition != null) {
+                        stringContentDisposition = file.ContentDesposition.toString();
+                    } else
+                        stringContentDisposition = "Content-Disposition: form-data;";
                     if (file.Name != null)
                         stringContentDisposition += "name=\"" + file.Name + "\";";
 
@@ -371,6 +375,7 @@ public class HTTPClient implements ICallbackResponse {
 
                     if (file.ContentType != null) {
                         bufferedOutputStream.writeBytes(file.ContentType);
+                        bufferedOutputStream.write(crlfb);
                     }
 
                     bufferedOutputStream.write(crlfb);
@@ -388,6 +393,8 @@ public class HTTPClient implements ICallbackResponse {
                         stream.close();
                     } else if (file.Data instanceof String) {
                         bufferedOutputStream.writeBytes((String) file.Data);
+                    } else if (file.Data instanceof byte[]) {
+                        bufferedOutputStream.write((byte[]) file.Data);
                     }
 
                     bufferedOutputStream.write(crlfb);
@@ -424,7 +431,9 @@ public class HTTPClient implements ICallbackResponse {
             if (callback != null)
                 callback.CallbackResponse(responseBody, responseCode);
 
-            return new ResponseResult(responseBody, responseCode);
+            return new
+
+                    ResponseResult(responseBody, responseCode);
         }
 
         @NonNull

@@ -7,5 +7,6 @@ public class HttpFile {
     @Nullable public String FileName;
     public Object Data;
     public String ContentType;
+    @Nullable public String ContentDesposition;
 
 }

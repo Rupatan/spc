@@ -1,5 +1,9 @@
 package ru.pm52.myapplication.Model;
 
+import android.text.Editable;
+
+import androidx.annotation.NonNull;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
@@ -19,13 +23,15 @@ public class TaskModel implements Serializable {
     @SerializedName("Дата")
     public Date DateTime;
 
+    @NonNull
     @SerializedName("Комментарий")
-    public String Comment;
+    public String Comment = "";
 
+    @NonNull
     @SerializedName("Факт")
-    public Double LeadTime;
+    public Double LeadTime = 0.0;
 
     @SerializedName("Исполнитель")
-    public Double Executor;
+    public UserModel Executor;
 
 }

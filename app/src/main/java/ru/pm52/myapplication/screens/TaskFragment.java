@@ -50,6 +50,7 @@ import com.google.gson.GsonBuilder;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -123,7 +124,7 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
                         .addHeader("Cache-Control", "post-check=0, pre-check=0")
                         .addHeader("Pragma", "no-cache")
                         .authentication(authRepository.getUsername(), authRepository.getPassword())
-                        .pathURL("mobile/tasks/upload?uid=" + uuidAsString)
+                        .pathURL("mobile/tasks/update?uid=" + uuidAsString)
                         .method(HTTPClient.METHOD_SEND.POST)
                         .callback(this);
 
@@ -132,20 +133,31 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
                         ImageView imageView = (ImageView) binding.linearPhoto.getChildAt(i);
                         Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
                         HttpFile httpFile = new HttpFile();
-                        httpFile.FileName = i + ".jpeg";
-                        httpFile.Name = i + "file";
+
+                        UUID uuidFile = UUID.randomUUID();
+                        String uuidFileString = "Image_" + uuid.toString().replace('-', '_');
+
+                        httpFile.FileName = String.format("%1$s.jpeg", uuidFileString);
+                        httpFile.Name = uuidFileString;
                         httpFile.Data = bitmap;
+                        httpFile.ContentType = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
                         httpFile.ContentType = "Content-Type: image/jpeg";
                         client.addFile(httpFile);
                     }
                 }
 
+                taskModel.Comment = String.valueOf(binding.Comment.getText());
+                taskModel.LeadTime = Double.parseDouble(String.valueOf(binding.leadTime.getText()));
+
+                String stringJson = new GsonBuilder().setPrettyPrinting().create().toJson(taskModel);
+
                 HttpFile objectJson = new HttpFile();
+                objectJson.ContentDesposition = "Content-Disposition: form-data; name=\"task\"";
                 objectJson.ContentType = "Content-Type: application/json; charset=UTF-8";
-                objectJson.Data = "{\"data\": 123}";
+                objectJson.Data = stringJson.getBytes(StandardCharsets.UTF_8);
                 client.addFile(objectJson);
 
-                client.build().setNameEvent("getlist").sendAsync();
+                client.build().setNameEvent("update").sendAsync();
             }
         });
 
@@ -385,6 +397,17 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
             Toast toast = Toast
                     .makeText(getContext(), errorMessage, Toast.LENGTH_SHORT);
             toast.show();
+        }
+    }
+
+    @Override
+    public void NotifyResponse(String eventString, Object... params) {
+        if (eventString.equals("update")){
+            int code = (int)params[0];
+            String stringParams = params[1].toString();
+            if (code == 200){
+
+            }
         }
     }
 
