@@ -30,16 +30,6 @@ import java.util.UUID;
 
 public class HTTPClient implements ICallbackResponse {
 
-    public static class ResponseResult {
-        public final String Body;
-        public final int Code;
-
-        public ResponseResult(String body, int code) {
-            Body = body;
-            Code = code;
-        }
-    }
-
     @Override
     public void CallbackResponse(String content, int responseCode) {
         if (callback != null)

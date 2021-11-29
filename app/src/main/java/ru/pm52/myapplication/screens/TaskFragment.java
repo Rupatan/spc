@@ -46,6 +46,10 @@ import androidx.lifecycle.Observer;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -63,16 +67,20 @@ import ru.pm52.myapplication.BuildConfig;
 import ru.pm52.myapplication.FragmentBase;
 import ru.pm52.myapplication.HTTPClient;
 import ru.pm52.myapplication.HttpFile;
+import ru.pm52.myapplication.INotify;
 import ru.pm52.myapplication.Model.AuthRepository;
 import ru.pm52.myapplication.Model.ModelContext;
 import ru.pm52.myapplication.Model.TaskModel;
 import ru.pm52.myapplication.R;
+import ru.pm52.myapplication.ResponseResult;
 import ru.pm52.myapplication.ViewModel.TaskViewModel;
 import ru.pm52.myapplication.databinding.AlertDialogChoicePhotoBinding;
 import ru.pm52.myapplication.databinding.FragmentTaskBinding;
 
 public class TaskFragment extends FragmentBase implements View.OnClickListener {
 
+    @Nullable
+    private INotify iNotify;
     private FragmentTaskBinding binding;
     private TaskViewModel viewModel;
     @Nullable
@@ -140,7 +148,7 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
                         httpFile.FileName = String.format("%1$s.jpeg", uuidFileString);
                         httpFile.Name = uuidFileString;
                         httpFile.Data = bitmap;
-                        httpFile.ContentType = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
+                        httpFile.ContentDesposition = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
                         httpFile.ContentType = "Content-Type: image/jpeg";
                         client.addFile(httpFile);
                     }
@@ -149,7 +157,11 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
                 taskModel.Comment = String.valueOf(binding.Comment.getText());
                 taskModel.LeadTime = Double.parseDouble(String.valueOf(binding.leadTime.getText()));
 
-                String stringJson = new GsonBuilder().setPrettyPrinting().create().toJson(taskModel);
+                String stringJson = new GsonBuilder()
+                        .setPrettyPrinting()
+                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                        .create()
+                        .toJson(taskModel);
 
                 HttpFile objectJson = new HttpFile();
                 objectJson.ContentDesposition = "Content-Disposition: form-data; name=\"task\"";
@@ -402,13 +414,24 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
 
     @Override
     public void NotifyResponse(String eventString, Object... params) {
+        String msg = "Ошибка выполнения задачи";
         if (eventString.equals("update")){
             int code = (int)params[0];
-            String stringParams = params[1].toString();
             if (code == 200){
+                String stringParams = params[1].toString();
+                try {
+                    JSONObject obj = new JSONObject(stringParams);
+                    if (obj.getInt("status") == 1)
+                        msg = "Задача выполнена";
+                    else
+                        msg = obj.getString("info");
 
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
             }
         }
+        Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
     }
 
     @Override
