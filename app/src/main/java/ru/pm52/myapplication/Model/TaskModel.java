@@ -34,4 +34,9 @@ public class TaskModel implements Serializable {
     @SerializedName("Исполнитель")
     public UserModel Executor;
 
+    @SerializedName("Контрагент")
+    public String Contragent;
+
+    @SerializedName("КонтактноеЛицо")
+    public String Contact;
 }

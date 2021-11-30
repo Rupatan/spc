@@ -76,12 +76,13 @@ import ru.pm52.myapplication.ResponseResult;
 import ru.pm52.myapplication.ViewModel.TaskViewModel;
 import ru.pm52.myapplication.databinding.AlertDialogChoicePhotoBinding;
 import ru.pm52.myapplication.databinding.FragmentTaskBinding;
+import ru.pm52.myapplication.databinding.LadfadBinding;
 
 public class TaskFragment extends FragmentBase {
 
     @Nullable
     private INotify iNotify;
-    private FragmentTaskBinding binding;
+    private LadfadBinding binding;
     private TaskViewModel viewModel;
     @Nullable
     private TaskModel taskModel;
@@ -103,9 +104,9 @@ public class TaskFragment extends FragmentBase {
             taskModel = viewModel.getTaskModel();
         }
 
-        binding = FragmentTaskBinding.inflate(inflater, container, false);
+        binding = LadfadBinding.inflate(inflater, container, false);
 
-        binding.button.setOnClickListener(this::onClick);
+        binding.addImage.setOnClickListener(this::onClick);
 
         viewModel.Task.observe(getViewLifecycleOwner(), new Observer<TaskModel>() {
             @Override
@@ -116,10 +117,12 @@ public class TaskFragment extends FragmentBase {
                 SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
                 binding.txtDate.setText(formatter.format(taskModel.DateTime));
                 binding.txtNumber.setText(taskModel.Number);
+                binding.contact.setText(taskModel.Contact);
+                binding.cotragent.setText(taskModel.Contragent);
             }
         });
 
-        binding.button2.setOnClickListener(this::onClickSendComplete);
+        //binding.button2.setOnClickListener(this::onClickSendComplete);
 
         viewModel.setTask(taskModel);
 
@@ -382,8 +385,8 @@ public class TaskFragment extends FragmentBase {
             }
         }
 
-        binding.taskPrb.setVisibility(View.GONE);
-        binding.taskLayoutProgressBar.setVisibility(View.GONE);
+//        binding.taskPrb.setVisibility(View.GONE);
+//        binding.taskLayoutProgressBar.setVisibility(View.GONE);
 
         Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
 
@@ -459,8 +462,8 @@ public class TaskFragment extends FragmentBase {
         objectJson.Data = stringJson.getBytes(StandardCharsets.UTF_8);
         client.addFile(objectJson);
 
-        binding.taskPrb.setVisibility(View.VISIBLE);
-        binding.taskLayoutProgressBar.setVisibility(View.VISIBLE);
+//        binding.taskPrb.setVisibility(View.VISIBLE);
+//        binding.taskLayoutProgressBar.setVisibility(View.VISIBLE);
 
         try {
             Thread.sleep(5000);
