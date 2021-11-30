@@ -77,7 +77,7 @@ import ru.pm52.myapplication.ViewModel.TaskViewModel;
 import ru.pm52.myapplication.databinding.AlertDialogChoicePhotoBinding;
 import ru.pm52.myapplication.databinding.FragmentTaskBinding;
 
-public class TaskFragment extends FragmentBase implements View.OnClickListener {
+public class TaskFragment extends FragmentBase {
 
     @Nullable
     private INotify iNotify;
@@ -105,7 +105,7 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
 
         binding = FragmentTaskBinding.inflate(inflater, container, false);
 
-        binding.button.setOnClickListener(this);
+        binding.button.setOnClickListener(this::onClick);
 
         viewModel.Task.observe(getViewLifecycleOwner(), new Observer<TaskModel>() {
             @Override
@@ -119,59 +119,7 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
             }
         });
 
-        binding.button2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                UUID uuid = UUID.randomUUID();
-                String uuidAsString = uuid.toString().replace('-', '_');
-                AuthRepository authRepository = AuthRepository.getInstance();
-
-                HTTPClient.Builder client = new HTTPClient.Builder(ModelContext.URLBase)
-                        .addHeader("Expires", "Mon, 26 Jul 1997 05:00:00 GMT")
-                        .addHeader("Cache-Control", "no-store, no-cache, must-revalidate")
-                        .addHeader("Cache-Control", "post-check=0, pre-check=0")
-                        .addHeader("Pragma", "no-cache")
-                        .authentication(authRepository.getUsername(), authRepository.getPassword())
-                        .pathURL("mobile/tasks/update?uid=" + uuidAsString)
-                        .method(HTTPClient.METHOD_SEND.POST)
-                        .callback(this);
-
-                for (int i = 0; i <= binding.linearPhoto.getChildCount() - 1; i++) {
-                    if (binding.linearPhoto.getChildAt(i) instanceof ImageView) {
-                        ImageView imageView = (ImageView) binding.linearPhoto.getChildAt(i);
-                        Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
-                        HttpFile httpFile = new HttpFile();
-
-                        UUID uuidFile = UUID.randomUUID();
-                        String uuidFileString = "Image_" + uuid.toString().replace('-', '_');
-
-                        httpFile.FileName = String.format("%1$s.jpeg", uuidFileString);
-                        httpFile.Name = uuidFileString;
-                        httpFile.Data = bitmap;
-                        httpFile.ContentDesposition = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
-                        httpFile.ContentType = "Content-Type: image/jpeg";
-                        client.addFile(httpFile);
-                    }
-                }
-
-                taskModel.Comment = String.valueOf(binding.Comment.getText());
-                taskModel.LeadTime = Double.parseDouble(String.valueOf(binding.leadTime.getText()));
-
-                String stringJson = new GsonBuilder()
-                        .setPrettyPrinting()
-                        .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                        .create()
-                        .toJson(taskModel);
-
-                HttpFile objectJson = new HttpFile();
-                objectJson.ContentDesposition = "Content-Disposition: form-data; name=\"task\"";
-                objectJson.ContentType = "Content-Type: application/json; charset=UTF-8";
-                objectJson.Data = stringJson.getBytes(StandardCharsets.UTF_8);
-                client.addFile(objectJson);
-
-                client.build().setNameEvent("update").sendAsync();
-            }
-        });
+        binding.button2.setOnClickListener(this::onClickSendComplete);
 
         viewModel.setTask(taskModel);
 
@@ -415,10 +363,12 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
     @Override
     public void NotifyResponse(String eventString, Object... params) {
         String msg = "Ошибка выполнения задачи";
-        if (eventString.equals("update")){
-            int code = (int)params[0];
-            if (code == 200){
-                String stringParams = params[1].toString();
+        boolean isDone = false;
+        if (eventString.equals("update")) {
+            int code = (int) params[1];
+            isDone = code == 200;
+            if (isDone) {
+                String stringParams = params[0].toString();
                 try {
                     JSONObject obj = new JSONObject(stringParams);
                     if (obj.getInt("status") == 1)
@@ -431,12 +381,93 @@ public class TaskFragment extends FragmentBase implements View.OnClickListener {
                 }
             }
         }
-        Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
+
+        binding.taskPrb.setVisibility(View.GONE);
+        binding.taskLayoutProgressBar.setVisibility(View.GONE);
+
+        Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
+
+        if (isDone)
+            getParentFragmentManager().popBackStack();
     }
 
-    @Override
     public void onClick(View v) {
 //        captureImageCameraOrGallery();
         requestMultiplePermissions();
+    }
+
+    public void onClickSendComplete(View view) {
+
+        String stringLeadTime = String.valueOf(binding.leadTime.getText());
+
+        try {
+            if (stringLeadTime.isEmpty()) {
+                Toast.makeText(getActivity(), "Не заполнено поле \"Факт\"", Toast.LENGTH_LONG).show();
+                binding.leadTime.setClickable(true);
+                return;
+            }
+            taskModel.LeadTime = stringLeadTime.isEmpty() ? 0.0 : Double.parseDouble(stringLeadTime);
+        } catch (Exception e) {
+            Toast.makeText(getActivity(), e.getMessage(), Toast.LENGTH_LONG).show();
+            return;
+        }
+
+        taskModel.Comment = String.valueOf(binding.Comment.getText());
+
+        UUID uuid = UUID.randomUUID();
+        String uuidAsString = uuid.toString().replace('-', '_');
+        AuthRepository authRepository = AuthRepository.getInstance();
+
+        HTTPClient.Builder client = new HTTPClient.Builder(ModelContext.URLBase)
+                .addHeader("Expires", "Mon, 26 Jul 1997 05:00:00 GMT")
+                .addHeader("Cache-Control", "no-store, no-cache, must-revalidate")
+                .addHeader("Cache-Control", "post-check=0, pre-check=0")
+                .addHeader("Pragma", "no-cache")
+                .authentication(authRepository.getUsername(), authRepository.getPassword())
+                .pathURL("mobile/tasks/update?uid=" + uuidAsString)
+                .method(HTTPClient.METHOD_SEND.POST)
+                .callback(this);
+
+        for (int i = 0; i <= binding.linearPhoto.getChildCount() - 1; i++) {
+            if (binding.linearPhoto.getChildAt(i) instanceof ImageView) {
+                ImageView imageView = (ImageView) binding.linearPhoto.getChildAt(i);
+                Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+                HttpFile httpFile = new HttpFile();
+
+                UUID uuidFile = UUID.randomUUID();
+                String uuidFileString = "Image_" + uuid.toString().replace('-', '_');
+
+                httpFile.FileName = String.format("%1$s.jpeg", uuidFileString);
+                httpFile.Name = uuidFileString;
+                httpFile.Data = bitmap;
+                httpFile.ContentDesposition = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
+                httpFile.ContentType = "Content-Type: image/jpeg";
+                client.addFile(httpFile);
+            }
+        }
+
+
+        String stringJson = new GsonBuilder()
+                .setPrettyPrinting()
+                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+                .create()
+                .toJson(taskModel);
+
+        HttpFile objectJson = new HttpFile();
+        objectJson.ContentDesposition = "Content-Disposition: form-data; name=\"task\"";
+        objectJson.ContentType = "Content-Type: application/json; charset=UTF-8";
+        objectJson.Data = stringJson.getBytes(StandardCharsets.UTF_8);
+        client.addFile(objectJson);
+
+        binding.taskPrb.setVisibility(View.VISIBLE);
+        binding.taskLayoutProgressBar.setVisibility(View.VISIBLE);
+
+        try {
+            Thread.sleep(5000);
+        } catch (Exception e) {
+            NotifyResponse("update", "{status:1}", 200);
+        }
+//        client.build().setNameEvent("update").sendAsync();
+
     }
 }

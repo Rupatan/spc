@@ -5,6 +5,7 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.util.Base64;
 import android.util.Base64OutputStream;
+import android.view.View;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -31,7 +32,7 @@ import java.util.UUID;
 public class HTTPClient implements ICallbackResponse {
 
     @Override
-    public void CallbackResponse(String content, int responseCode) {
+    public void CallbackResponse(String content, int responseCode) throws Exception {
         if (callback != null)
             callback.CallbackResponse(content, responseCode);
 
@@ -214,10 +215,25 @@ public class HTTPClient implements ICallbackResponse {
         }
 
         public Builder callback(Object object) {
+//            this.callback = (ICallbackResponse) object;
+
             if (object instanceof ICallbackResponse)
                 this.callback = (ICallbackResponse) object;
             else if (object instanceof INotify)
                 this.notify = (INotify) object;
+
+            return this;
+        }
+
+        public Builder callbackNotify(View.OnClickListener object) {
+            this.notify = (INotify) object;
+
+//            if (object instanceof ICallbackResponse
+//                    || (cl != null && cl.isAssignableFrom(ICallbackResponse.class)))
+//                this.callback = (ICallbackResponse) object;
+//            else if (object instanceof INotify
+//                    || (cl != null && cl.isAssignableFrom(INotify.class)))
+//                this.notify = (INotify) object;
 
             return this;
         }
@@ -421,9 +437,7 @@ public class HTTPClient implements ICallbackResponse {
             if (callback != null)
                 callback.CallbackResponse(responseBody, responseCode);
 
-            return new
-
-                    ResponseResult(responseBody, responseCode);
+            return new ResponseResult(responseBody, responseCode);
         }
 
         @NonNull
