@@ -96,7 +96,9 @@
                 <TextView
                     android:id="@+id/cotragent"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:paddingStart="5dp"/>
             </androidx.appcompat.widget.LinearLayoutCompat>
 
             <androidx.appcompat.widget.LinearLayoutCompat
@@ -113,7 +115,9 @@
                 <TextView
                     android:id="@+id/contact"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:paddingStart="5dp"/>
             </androidx.appcompat.widget.LinearLayoutCompat>
 
             <TextView
