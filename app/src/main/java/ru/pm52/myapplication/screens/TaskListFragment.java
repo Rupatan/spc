@@ -2,6 +2,7 @@ package ru.pm52.myapplication.screens;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -34,6 +35,7 @@ import ru.pm52.myapplication.Model.AuthRepository;
 import ru.pm52.myapplication.Model.ModelContext;
 import ru.pm52.myapplication.Model.TaskModel;
 import ru.pm52.myapplication.Navigator;
+import ru.pm52.myapplication.R;
 import ru.pm52.myapplication.RecycleViewAdapter;
 import ru.pm52.myapplication.ViewModel.TaskListViewModel;
 import ru.pm52.myapplication.databinding.FragmentTaskListBinding;
@@ -60,6 +62,9 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(TaskListViewModel.class);
+
+        ContextThemeWrapper contextThemeWrapper = new ContextThemeWrapper(getContext(), R.style.Theme_pm52_ActionBar);
+        inflater.cloneInContext(contextThemeWrapper);
 
         binding = FragmentTaskListBinding.inflate(inflater, container, false);
 
