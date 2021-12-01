@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel;
 
 import ru.pm52.myapplication.ICallbackResponse;
 import ru.pm52.myapplication.INotify;
+import ru.pm52.myapplication.Model.TaskModel;
 
 public class ViewModelBase extends ViewModel implements INotify {
 
@@ -12,3 +13,4 @@ public class ViewModelBase extends ViewModel implements INotify {
 
     }
 }
+

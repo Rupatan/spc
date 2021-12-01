@@ -6,101 +6,102 @@
     android:orientation="vertical">
 
     <androidx.cardview.widget.CardView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content">
-
-            <TextView
-                android:id="@+id/imageButton"
-                android:layout_width="wrap_content"
-                android:layout_height="0dip"
-                android:gravity="center"
-                android:paddingStart="5dp"
-                android:paddingEnd="5dp"
-                android:text="+"
-                android:textSize="20dp"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/Name"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:padding="2dp"
-                android:text="Задача"
-                android:textColor="@color/black"
-                app:layout_constraintEnd_toStartOf="@+id/DatePerfomance"
-                app:layout_constraintStart_toEndOf="@+id/imageButton"
-                app:layout_constraintTop_toTopOf="parent" />
-
-            <TextView
-                android:id="@+id/DatePerfomance"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="2dp"
-                android:text="Задача23"
-                app:layout_constraintBottom_toBottomOf="@+id/Name"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/Name" />
-
-            <TextView
-                android:id="@+id/Contragent"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_margin="3dp"
-                android:padding="2dp"
-                android:text="Contragent"
-                app:layout_constraintStart_toEndOf="@+id/imageButton"
-                app:layout_constraintTop_toBottomOf="@+id/Name" />
-
-            <TextView
-                android:id="@+id/Contact"
-                android:layout_width="0dip"
-                android:layout_height="wrap_content"
-                android:ellipsize="end"
-                android:gravity="right"
-                android:padding="2dp"
-                android:text="Contact"
-                app:layout_constraintBottom_toBottomOf="@+id/Contragent"
-                app:layout_constraintEnd_toStartOf="@+id/Number"
-
-                app:layout_constraintStart_toEndOf="@+id/Contragent"
-                app:layout_constraintTop_toTopOf="@+id/Contragent" />
-
-            <TextView
-                android:id="@+id/Number"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:padding="2dp"
-                android:text="Number"
-                app:layout_constraintBottom_toBottomOf="@+id/Contact"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/Contact" />
-
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
-    </androidx.cardview.widget.CardView>
-
-    <androidx.cardview.widget.CardView
+        android:id="@+id/cardViewMainInfo"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginBottom="5dp">
 
-        <TextView
-            android:id="@+id/Description"
+        <androidx.appcompat.widget.LinearLayoutCompat
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:text="Описание"
-            android:visibility="visible"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toBottomOf="@+id/Contact" />
-    </androidx.cardview.widget.CardView>
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
 
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <TextView
+                    android:id="@+id/imagePlusMinus"
+                    android:layout_width="25dp"
+                    android:layout_height="0dip"
+                    android:gravity="center"
+                    android:text="+"
+                    android:textSize="20dp"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/Name"
+                    android:layout_width="0dip"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:padding="2dp"
+                    android:text="Задача"
+                    android:textColor="@color/black"
+                    app:layout_constraintEnd_toStartOf="@+id/DatePerfomance"
+                    app:layout_constraintStart_toEndOf="@+id/imagePlusMinus"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <TextView
+                    android:id="@+id/DatePerfomance"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="2dp"
+                    android:text="Задача23"
+                    app:layout_constraintBottom_toBottomOf="@+id/Name"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/Name" />
+
+                <TextView
+                    android:id="@+id/Contragent"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_margin="3dp"
+                    android:padding="2dp"
+                    android:text="Contragent"
+                    app:layout_constraintStart_toEndOf="@+id/imagePlusMinus"
+                    app:layout_constraintTop_toBottomOf="@+id/Name" />
+
+                <TextView
+                    android:id="@+id/Contact"
+                    android:layout_width="0dip"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:gravity="right"
+                    android:padding="2dp"
+                    android:text="Contact"
+                    app:layout_constraintBottom_toBottomOf="@+id/Contragent"
+                    app:layout_constraintEnd_toStartOf="@+id/Number"
+
+                    app:layout_constraintStart_toEndOf="@+id/Contragent"
+                    app:layout_constraintTop_toTopOf="@+id/Contragent" />
+
+                <TextView
+                    android:id="@+id/Number"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="2dp"
+                    android:text="Number"
+                    app:layout_constraintBottom_toBottomOf="@+id/Contact"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintTop_toTopOf="@+id/Contact" />
+
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+            <TextView android:background="@drawable/border"
+                android:id="@+id/Description"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:text="Описание"
+                android:visibility="gone"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@+id/Contact"
+                android:padding="2dp"
+                />
+        </androidx.appcompat.widget.LinearLayoutCompat>
+    </androidx.cardview.widget.CardView>
 </androidx.appcompat.widget.LinearLayoutCompat>

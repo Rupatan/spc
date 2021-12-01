@@ -11,6 +11,7 @@ import android.widget.FrameLayout;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentManager;
@@ -32,6 +33,11 @@ import ru.pm52.myapplication.screens.TaskFragment;
 
 public class MainActivity extends AppCompatActivity implements Navigator {
 
+    interface ICallBackPress{
+        public void CallBackPress();
+    }
+
+    private List<ICallBackPress> callBackPresses = new ArrayList<>();
     private ActivityMainBinding binding;
 
     @Override
@@ -53,7 +59,7 @@ public class MainActivity extends AppCompatActivity implements Navigator {
     }
 
     @Override
-    public void showDetails(TaskModel task) {
+    public void showDetails(TaskModel task, @Nullable INotify callback) {
         getSupportFragmentManager()
                 .beginTransaction()
                 .replace(R.id.fragmentContainer, new TaskFragment(task))
@@ -61,10 +67,32 @@ public class MainActivity extends AppCompatActivity implements Navigator {
                 .commit();
     }
 
+    public void addListenerCallbackPress(ICallBackPress object){
+        callBackPresses.add(object);
+    }
+
+    public void removeListenerCallbackPress(ICallBackPress object){
+        callBackPresses.remove(object);
+    }
+
+    @Override
+    public void onBackPressed() {
+        for (ICallBackPress v : callBackPresses)
+            v.CallBackPress();
+
+        super.onBackPressed();
+    }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         return super.onCreateOptionsMenu(menu);
 
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        callBackPresses.clear();
     }
 
     @Override

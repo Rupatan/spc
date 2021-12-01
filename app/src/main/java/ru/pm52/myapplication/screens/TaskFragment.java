@@ -22,6 +22,7 @@ import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.opengl.Visibility;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.StrictMode;
@@ -35,6 +36,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CompoundButton;
 import android.widget.ImageView;
 import android.widget.Toast;
 
@@ -76,6 +78,7 @@ import ru.pm52.myapplication.FragmentBase;
 import ru.pm52.myapplication.HTTPClient;
 import ru.pm52.myapplication.HttpFile;
 import ru.pm52.myapplication.INotify;
+import ru.pm52.myapplication.MainActivity;
 import ru.pm52.myapplication.Model.AuthRepository;
 import ru.pm52.myapplication.Model.ModelContext;
 import ru.pm52.myapplication.Model.TaskModel;
@@ -107,7 +110,9 @@ public class TaskFragment extends FragmentBase {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+        ((MainActivity)getActivity()).addListenerCallbackPress(this);
     }
+
 
     @Nullable
     @Override
@@ -121,7 +126,13 @@ public class TaskFragment extends FragmentBase {
         binding = LadfadBinding.inflate(inflater, container, false);
 
         binding.addImage.setOnClickListener(this::onClick);
-
+        binding.haveTask.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                int visibility = b ? View.VISIBLE : View.GONE;
+                binding.textSubtask.setVisibility(visibility);
+            }
+        });
         viewModel.Task.observe(getViewLifecycleOwner(), new Observer<TaskModel>() {
             @Override
             public void onChanged(TaskModel taskModel) {
@@ -133,6 +144,8 @@ public class TaskFragment extends FragmentBase {
                 binding.txtNumber.setText(taskModel.Number);
                 binding.contact.setText(taskModel.Contact);
                 binding.cotragent.setText(taskModel.Contragent);
+                binding.Description.setText(taskModel.Descritpion);
+
             }
         });
 
@@ -189,27 +202,6 @@ public class TaskFragment extends FragmentBase {
             captureImageCameraOrGallery();
         }
 
-
-//            registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), new ActivityResultCallback<Map<String, Boolean>>() {
-//                @Override
-//                public void onActivityResult(Map<String, Boolean> result) {
-//                    boolean resultCode = true;
-//                    for (Map.Entry<String, Boolean> i : result.entrySet()) {
-//                        if (!i.getValue()) {
-//                            resultCode = false;
-//                            break;
-//                        }
-//                    }
-//
-//                    if (resultCode)
-//                        captureImageCameraOrGallery();
-//                }
-//            }).launch(new String[]{
-//                    Manifest.permission.READ_EXTERNAL_STORAGE,
-//                    Manifest.permission.WRITE_EXTERNAL_STORAGE,
-//                    Manifest.permission.CAMERA
-//            });
-//        }
     }
 
     private Uri uriPhoto;
@@ -333,7 +325,7 @@ public class TaskFragment extends FragmentBase {
         return uribt;
     }
 
-    public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+    public Bitmap getResizedBitmap(Bitmap bm, float newWidth, float newHeight) {
         int width = bm.getWidth();
         int height = bm.getHeight();
         float scaleWidth = ((float) newWidth) / width;
@@ -352,15 +344,8 @@ public class TaskFragment extends FragmentBase {
         int height = bm.getHeight();
 
         float newWidth = width * ((float) newHeight / height);
-        float scaleWidth = ((float) newWidth) / width;
-        float scaleHeight = ((float) newHeight) / height;
-        Matrix matrix = new Matrix();
-        matrix.postScale(scaleWidth, scaleHeight);
 
-        Bitmap resizedBitmap = Bitmap.createBitmap(
-                bm, 0, 0, width, height, matrix, false);
-        bm.recycle();
-        return resizedBitmap;
+        return getResizedBitmap(bm, newWidth, newHeight);
     }
 
     @Override
@@ -426,6 +411,8 @@ public class TaskFragment extends FragmentBase {
         }
 
         taskModel.Comment = String.valueOf(binding.Comment.getText());
+        taskModel.HaveTask = binding.haveTask.isChecked();
+        taskModel.TextSubtask = String.valueOf(binding.textSubtask.getText());
 
         UUID uuid = UUID.randomUUID();
         String uuidAsString = uuid.toString().replace('-', '_');
@@ -488,5 +475,17 @@ public class TaskFragment extends FragmentBase {
                 return super.onOptionsItemSelected(item);
         }
 
+    }
+
+    @Override
+    public void CallBackPress(){
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        ((MainActivity)getActivity()).removeListenerCallbackPress(this);
     }
 }

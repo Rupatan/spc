@@ -12,10 +12,15 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 
-public abstract class FragmentBase extends Fragment implements INotify {
+public abstract class FragmentBase extends Fragment implements INotify, MainActivity.ICallBackPress {
 
     @Override
     public void NotifyResponse(String eventString, Object... params) throws InterruptedException {
+
+    }
+
+    @Override
+    public void CallBackPress(){
 
     }
 

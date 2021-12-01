@@ -31,6 +31,7 @@ import java.util.UUID;
 import ru.pm52.myapplication.FragmentBase;
 import ru.pm52.myapplication.HTTPClient;
 import ru.pm52.myapplication.IRecycleViewItemClick;
+import ru.pm52.myapplication.MainActivity;
 import ru.pm52.myapplication.Model.AuthRepository;
 import ru.pm52.myapplication.Model.ModelContext;
 import ru.pm52.myapplication.Model.TaskModel;
@@ -48,14 +49,22 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
     private boolean isNew = false;
     private boolean isRefresh = false;
     private List<TaskModel> listTask;
+    private boolean isCallbackPress = false;
 
     public TaskListFragment(@Nullable List<TaskModel> list) {
         listTask = list;
         isNew = true;
+
     }
 
     public TaskListFragment() {
         this(null);
+    }
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        ((MainActivity) getActivity()).addListenerCallbackPress(this);
     }
 
     @Nullable
@@ -65,7 +74,7 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
 
         binding = FragmentTaskListBinding.inflate(inflater, container, false);
 
-        if (!isNew) {
+        if (!isNew && !isCallbackPress) {
             binding.swipeContainer.setRefreshing(true);
 
             viewModel.refresh();
@@ -112,6 +121,13 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
     public void onDestroyView() {
         super.onDestroyView();
         isNew = false;
+
+    }
+
+    @Override
+    public void onDestroy() {
+        ((MainActivity) getActivity()).removeListenerCallbackPress(this);
+        super.onDestroy();
     }
 
     @Override
@@ -119,8 +135,20 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
         super.onAttach(context);
     }
 
+
     @Override
-    public void onItemClick(TaskModel model) {
-        ((Navigator) getActivity()).showDetails(model);
+    public void onItemClick(TaskModel model, View view) {
+        ((Navigator) getActivity()).showDetails(model, this);
+        isCallbackPress = false;
+    }
+
+    @Override
+    public void CallBackPress(){
+        isCallbackPress = true;
+    }
+
+    @Override
+    public void NotifyResponse(String eventString, Object... params) throws InterruptedException {
+        //if ()
     }
 }

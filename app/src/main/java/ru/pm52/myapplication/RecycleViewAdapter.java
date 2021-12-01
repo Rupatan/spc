@@ -1,11 +1,14 @@
 package ru.pm52.myapplication;
 
 import android.annotation.SuppressLint;
+import android.content.res.ColorStateList;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -13,8 +16,10 @@ import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.AbstractList;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import ru.pm52.myapplication.Model.TaskModel;
@@ -66,6 +71,24 @@ public class RecycleViewAdapter
             b.Contact.setText(taskModel.Contact);
             b.Contragent.setText(taskModel.Contragent);
             b.Description.setText(taskModel.Descritpion);
+
+            Date date = new Date();
+            if (date.getTime() >= taskModel.DatePerfomance.getTime()) {
+                b.DatePerfomance.setTextColor(Color.RED);
+            }
+
+            b.imagePlusMinus.setTag(false);
+            b.imagePlusMinus.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    TextView txt = b.imagePlusMinus;
+                    boolean isVisible = ((boolean) txt.getTag());
+                    b.Description.setVisibility(isVisible ? View.GONE : View.VISIBLE);
+                    b.imagePlusMinus.setTag(!isVisible);
+
+                    txt.setText(isVisible ? "+" : "-");
+                }
+            });
         }
     }
 
@@ -78,7 +101,10 @@ public class RecycleViewAdapter
     public void onClick(View view) {
         if (objectItemClick != null) {
             TaskModel model = (TaskModel) view.getTag();
-            objectItemClick.onItemClick(model);
+            objectItemClick.onItemClick(model, view);
+
+        } else if (view.getId() == R.id.imagePlusMinus) {
+
         }
     }
 

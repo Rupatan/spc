@@ -45,4 +45,11 @@ public class TaskModel implements Serializable {
 
     @SerializedName("Описание")
     public String Descritpion;
+
+    @SerializedName("ТекстПодзадачи")
+    public String TextSubtask;
+
+    @NonNull
+    @SerializedName("ЕстьЗадача")
+    public boolean HaveTask = false;
 }
