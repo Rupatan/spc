@@ -63,9 +63,6 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this).get(TaskListViewModel.class);
 
-        ContextThemeWrapper contextThemeWrapper = new ContextThemeWrapper(getContext(), R.style.Theme_pm52_ActionBar);
-        inflater.cloneInContext(contextThemeWrapper);
-
         binding = FragmentTaskListBinding.inflate(inflater, container, false);
 
         if (!isNew) {

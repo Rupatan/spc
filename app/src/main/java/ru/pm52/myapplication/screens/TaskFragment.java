@@ -27,6 +27,9 @@ import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -38,6 +41,7 @@ import androidx.activity.result.contract.ActivityResultContract;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
@@ -95,6 +99,12 @@ public class TaskFragment extends FragmentBase {
         this(null);
     }
 
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+    }
+
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -127,6 +137,13 @@ public class TaskFragment extends FragmentBase {
         viewModel.setTask(taskModel);
 
         return binding.getRoot();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.main_menu, menu);
     }
 
     @Override
@@ -357,8 +374,7 @@ public class TaskFragment extends FragmentBase {
         } catch (ActivityNotFoundException anfe) {
             // display an error message
             String errorMessage = "Whoops - your device doesn't support the crop action!";
-            Toast toast = Toast
-                    .makeText(getContext(), errorMessage, Toast.LENGTH_SHORT);
+            Toast toast = Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT);
             toast.show();
         }
     }
@@ -374,24 +390,26 @@ public class TaskFragment extends FragmentBase {
                 String stringParams = params[0].toString();
                 try {
                     JSONObject obj = new JSONObject(stringParams);
-                    if (obj.getInt("status") == 1)
+                    if (obj.getInt("status") == 1) {
                         msg = "Задача выполнена";
-                    else
+                    } else {
                         msg = obj.getString("info");
+                        isDone = false;
+                    }
 
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    isDone = false;
                 }
             }
         }
 
-//        binding.taskPrb.setVisibility(View.GONE);
-//        binding.taskLayoutProgressBar.setVisibility(View.GONE);
-
-        Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
-
         if (isDone)
             getParentFragmentManager().popBackStack();
+        else {
+            binding.progressBarTask.setVisibility(View.VISIBLE);
+            binding.mtaskLayout.setVisibility(View.GONE);
+        }
     }
 
     public void onClick(View v) {
@@ -400,6 +418,12 @@ public class TaskFragment extends FragmentBase {
     }
 
     public void onClickSendComplete(View view) {
+        sendComplete();
+    }
+
+    protected void sendComplete() {
+        binding.progressBarTask.setVisibility(View.VISIBLE);
+        binding.mtaskLayout.setVisibility(View.GONE);
 
         String stringLeadTime = String.valueOf(binding.leadTime.getText());
 
@@ -407,6 +431,8 @@ public class TaskFragment extends FragmentBase {
             if (stringLeadTime.isEmpty()) {
                 Toast.makeText(getActivity(), "Не заполнено поле \"Факт\"", Toast.LENGTH_LONG).show();
                 binding.leadTime.setClickable(true);
+                binding.progressBarTask.setVisibility(View.GONE);
+                binding.mtaskLayout.setVisibility(View.VISIBLE);
                 return;
             }
             taskModel.LeadTime = stringLeadTime.isEmpty() ? 0.0 : Double.parseDouble(stringLeadTime);
@@ -462,15 +488,32 @@ public class TaskFragment extends FragmentBase {
         objectJson.Data = stringJson.getBytes(StandardCharsets.UTF_8);
         client.addFile(objectJson);
 
+
 //        binding.taskPrb.setVisibility(View.VISIBLE);
 //        binding.taskLayoutProgressBar.setVisibility(View.VISIBLE);
 
-        try {
-            Thread.sleep(5000);
-        } catch (Exception e) {
-            NotifyResponse("update", "{status:1}", 200);
+//        try {
+//            Thread.sleep(5000);
+//        } catch (Exception e) {
+//
+//        }
+//
+//        NotifyResponse("update", "{\"status\":1}", 200);
+        client.build().setNameEvent("update").sendAsync();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menuItemComplete: {
+
+                sendComplete();
+
+                return true;
+            }
+            default:
+                return super.onOptionsItemSelected(item);
         }
-//        client.build().setNameEvent("update").sendAsync();
 
     }
 }
