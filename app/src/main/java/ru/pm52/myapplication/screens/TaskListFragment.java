@@ -66,6 +66,8 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
         binding = FragmentTaskListBinding.inflate(inflater, container, false);
 
         if (!isNew) {
+            binding.swipeContainer.setRefreshing(true);
+
             viewModel.refresh();
         } else if (savedInstanceState == null) {
             viewModel.setListTasks(listTask);

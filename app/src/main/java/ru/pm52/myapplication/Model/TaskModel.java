@@ -39,4 +39,10 @@ public class TaskModel implements Serializable {
 
     @SerializedName("КонтактноеЛицо")
     public String Contact;
+
+    @SerializedName("СрокИсполнения")
+    public Date DatePerfomance;
+
+    @SerializedName("Описание")
+    public String Descritpion;
 }

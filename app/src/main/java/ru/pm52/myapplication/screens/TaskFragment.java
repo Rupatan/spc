@@ -14,9 +14,11 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Matrix;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -26,6 +28,7 @@ import android.os.StrictMode;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -58,6 +61,7 @@ import org.json.JSONObject;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -228,7 +232,7 @@ public class TaskFragment extends FragmentBase {
                 if (which == 0) {
                     Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
 
-                    String path = getActivity().getFilesDir().getAbsolutePath();
+                    String path = MediaStore.Images.Media.INTERNAL_CONTENT_URI.getPath();
 //
                     String imageFile = "/Image" + new Random().nextInt() + ".jpeg";
                     File file = new File(path, imageFile);
@@ -242,11 +246,11 @@ public class TaskFragment extends FragmentBase {
                     StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
                     StrictMode.setVmPolicy(builder.build());
 
-//                    intent.putExtra(MediaStore.EXTRA_OUTPUT, uriPhoto);
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, uriPhoto);
 //                    intent.putExtra("return-data", true);
                     startActivityForResult(intent, which);
                 } else if (which == 1) {
-                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+                    Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI);
                     startActivityForResult(intent, which);
                 }
 
@@ -261,29 +265,54 @@ public class TaskFragment extends FragmentBase {
     public void onActivityResult(int requestcode, int resultcode, Intent intent) {
         super.onActivityResult(requestcode, resultcode, intent);
         if (resultcode == RESULT_OK) {
-            Bitmap photo = (Bitmap) intent.getExtras().get("data");
+            Uri uri = intent.getData();
+            if (uri != null
+                    && uri instanceof Uri) {
+                try {
+                    Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
 
-            @Nullable Uri uriPhoto = null;
+                    float dip = 60f;
+                    Resources r = getResources();
+                    float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, r.getDisplayMetrics());
+
+
+                    Bitmap newBitmap = getResizedBitmap(bitmap, px);
+                    String name = uri.getPath();
+                    //String.valueOf(UUID.randomUUID()).replaceAll("-", "");
+                    addImage(newBitmap, name);
+
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            } else {
+                Bitmap photo = (Bitmap) intent.getExtras().get("data");
+
+                @Nullable Uri uriPhoto = null;
+
 //            if (requestcode == 0)
 //                getImageUri(getContext(), photo);
-            addImage(photo);
+//                addImage(photo);
+            }
         }
     }
 
-    public void addImage(Bitmap bt) {
+    public void addImage(Object bt, String name) {
         ImageView imageView = new ImageView(getContext());
         imageView.setPadding(2, 2, 2, 2);
 
-        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-        bt.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
-
-        byte[] bitmapdata = bytes.toByteArray();
-        Bitmap bitmap = BitmapFactory.decodeByteArray(bitmapdata, 0, bitmapdata.length);
-
-        imageView.setImageBitmap(bitmap);
+        if (bt instanceof Bitmap)
+            imageView.setImageBitmap((Bitmap) bt);
+        else if (bt instanceof Uri)
+            imageView.setImageURI((Uri) bt);
         imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+        imageView.setTag(name);
+
+        addedImages.add(name);
         binding.linearPhoto.addView(imageView);
     }
+
+    private List<String> addedImages = new ArrayList<>();
 
     @Nullable
     public Uri getImageUri(Context inContext, Bitmap inImage) {
@@ -304,79 +333,34 @@ public class TaskFragment extends FragmentBase {
         return uribt;
     }
 
-    public Uri bitmapToUriConverter(Bitmap mBitmap) {
-        Uri uri = null;
-        try {
-            final BitmapFactory.Options options = new BitmapFactory.Options();
-            // Calculate inSampleSize
-            options.inSampleSize = calculateInSampleSize(options, 100, 100);
+    public Bitmap getResizedBitmap(Bitmap bm, int newWidth, int newHeight) {
+        int width = bm.getWidth();
+        int height = bm.getHeight();
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleWidth, scaleHeight);
 
-            // Decode bitmap with inSampleSize set
-            options.inJustDecodeBounds = false;
-            Bitmap newBitmap = Bitmap.createScaledBitmap(mBitmap, 200, 200,
-                    true);
-            File file = new File(getActivity().getFilesDir(), "Image"
-                    + new Random().nextInt() + ".jpeg");
-            FileOutputStream out = getActivity().openFileOutput(file.getName(),
-                    Context.MODE_WORLD_READABLE);
-            newBitmap.compress(Bitmap.CompressFormat.JPEG, 100, out);
-            out.flush();
-            out.close();
-            //get absolute path
-            String realPath = file.getAbsolutePath();
-            File f = new File(realPath);
-            uri = Uri.fromFile(f);
-
-        } catch (Exception e) {
-            Log.e("Your Error Message", e.getMessage());
-        }
-        return uri;
+        Bitmap resizedBitmap = Bitmap.createBitmap(
+                bm, 0, 0, width, height, matrix, false);
+        bm.recycle();
+        return resizedBitmap;
     }
 
+    public Bitmap getResizedBitmap(Bitmap bm, float newHeight) {
+        int width = bm.getWidth();
+        int height = bm.getHeight();
 
-    public static int calculateInSampleSize(
-            BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        // Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
+        float newWidth = width * ((float) newHeight / height);
+        float scaleWidth = ((float) newWidth) / width;
+        float scaleHeight = ((float) newHeight) / height;
+        Matrix matrix = new Matrix();
+        matrix.postScale(scaleWidth, scaleHeight);
 
-        if (height > reqHeight || width > reqWidth) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) >= reqHeight
-                    && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-
-        return inSampleSize;
-    }
-
-    private void startCropImage(Uri uriPhoto) {
-        try {
-            Intent cropIntent = new Intent("com.android.camera.action.CROP");
-            cropIntent.setDataAndType(uriPhoto, "image/*");
-            cropIntent.putExtra("crop", "true");
-            cropIntent.putExtra("aspectX", 1);
-            cropIntent.putExtra("aspectY", 1);
-            // indicate output X and Y
-            cropIntent.putExtra("outputX", 256);
-            cropIntent.putExtra("outputY", 256);
-            // retrieve data on return
-            cropIntent.putExtra("return-data", true);
-            // start the activity - we handle returning in onActivityResult
-            startActivityForResult(cropIntent, 3);
-        } catch (ActivityNotFoundException anfe) {
-            // display an error message
-            String errorMessage = "Whoops - your device doesn't support the crop action!";
-            Toast toast = Toast.makeText(getContext(), errorMessage, Toast.LENGTH_SHORT);
-            toast.show();
-        }
+        Bitmap resizedBitmap = Bitmap.createBitmap(
+                bm, 0, 0, width, height, matrix, false);
+        bm.recycle();
+        return resizedBitmap;
     }
 
     @Override
@@ -405,7 +389,7 @@ public class TaskFragment extends FragmentBase {
         }
 
         if (isDone)
-            getParentFragmentManager().popBackStack();
+            getParentFragmentManager().popBackStackImmediate();
         else {
             binding.progressBarTask.setVisibility(View.VISIBLE);
             binding.mtaskLayout.setVisibility(View.GONE);
@@ -488,17 +472,6 @@ public class TaskFragment extends FragmentBase {
         objectJson.Data = stringJson.getBytes(StandardCharsets.UTF_8);
         client.addFile(objectJson);
 
-
-//        binding.taskPrb.setVisibility(View.VISIBLE);
-//        binding.taskLayoutProgressBar.setVisibility(View.VISIBLE);
-
-//        try {
-//            Thread.sleep(5000);
-//        } catch (Exception e) {
-//
-//        }
-//
-//        NotifyResponse("update", "{\"status\":1}", 200);
         client.build().setNameEvent("update").sendAsync();
     }
 
