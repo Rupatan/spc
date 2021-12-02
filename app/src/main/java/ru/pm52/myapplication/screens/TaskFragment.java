@@ -10,6 +10,7 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.content.ActivityNotFoundException;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -28,6 +29,8 @@ import android.os.Environment;
 import android.os.StrictMode;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.provider.OpenableColumns;
+import android.util.Base64;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.LayoutInflater;
@@ -60,10 +63,13 @@ import com.google.gson.JsonObject;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -110,7 +116,7 @@ public class TaskFragment extends FragmentBase {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-        ((MainActivity)getActivity()).addListenerCallbackPress(this);
+        ((MainActivity) getActivity()).addListenerCallbackPress(this);
     }
 
 
@@ -205,6 +211,8 @@ public class TaskFragment extends FragmentBase {
     }
 
     private Uri uriPhoto;
+    private Integer counterImages = 0;
+    private HashMap<Integer, Uri> addedImages = new HashMap<>();
 
     public void captureImageCameraOrGallery() {
 
@@ -222,25 +230,19 @@ public class TaskFragment extends FragmentBase {
                     dialog.dismiss();
 
                 if (which == 0) {
-                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                    try {
+                        String imageFileName = String.format("/Image_%1$s", String.valueOf(new Random().nextInt()).replaceAll("-", ""));
+                        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
+                        File image = File.createTempFile(imageFileName, ".jpeg", storageDir);
 
-                    String path = MediaStore.Images.Media.INTERNAL_CONTENT_URI.getPath();
-//
-                    String imageFile = "/Image" + new Random().nextInt() + ".jpeg";
-                    File file = new File(path, imageFile);
-                    uriPhoto = Uri.fromFile(file);
+                        uriPhoto = Uri.fromFile(image);
+                        Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, uriPhoto);
+                        startActivityForResult(takePhotoIntent, 0);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
-//                    uriPhoto = FileProvider.getUriForFile(
-//                            getCa,
-//                            TaskFragment.class.getSimpleName() + ".provider",
-//                            file);
-
-                    StrictMode.VmPolicy.Builder builder = new StrictMode.VmPolicy.Builder();
-                    StrictMode.setVmPolicy(builder.build());
-
-                    intent.putExtra(MediaStore.EXTRA_OUTPUT, uriPhoto);
-//                    intent.putExtra("return-data", true);
-                    startActivityForResult(intent, which);
                 } else if (which == 1) {
                     Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.INTERNAL_CONTENT_URI);
                     startActivityForResult(intent, which);
@@ -257,39 +259,35 @@ public class TaskFragment extends FragmentBase {
     public void onActivityResult(int requestcode, int resultcode, Intent intent) {
         super.onActivityResult(requestcode, resultcode, intent);
         if (resultcode == RESULT_OK) {
-            Uri uri = intent.getData();
-            if (uri != null
-                    && uri instanceof Uri) {
+            @Nullable Uri uri = null;
+            if (requestcode == 0)
+                uri = uriPhoto;
+            else
+                uri = intent.getData();
+
+            if (uri != null) {
                 try {
                     Bitmap bitmap = MediaStore.Images.Media.getBitmap(getActivity().getContentResolver(), uri);
-
                     float dip = 60f;
                     Resources r = getResources();
                     float px = TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dip, r.getDisplayMetrics());
 
-
                     Bitmap newBitmap = getResizedBitmap(bitmap, px);
-                    String name = uri.getPath();
-                    //String.valueOf(UUID.randomUUID()).replaceAll("-", "");
-                    addImage(newBitmap, name);
 
+                    addImage(newBitmap, uri);
+
+                    uriPhoto = null;
 
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
             } else {
-                Bitmap photo = (Bitmap) intent.getExtras().get("data");
-
-                @Nullable Uri uriPhoto = null;
-
-//            if (requestcode == 0)
-//                getImageUri(getContext(), photo);
-//                addImage(photo);
+                Toast.makeText(getContext(), "Ошибка добавления фото", Toast.LENGTH_SHORT).show();
             }
         }
     }
 
-    public void addImage(Object bt, String name) {
+    public void addImage(Object bt, Uri name) {
         ImageView imageView = new ImageView(getContext());
         imageView.setPadding(2, 2, 2, 2);
 
@@ -298,31 +296,11 @@ public class TaskFragment extends FragmentBase {
         else if (bt instanceof Uri)
             imageView.setImageURI((Uri) bt);
         imageView.setScaleType(ImageView.ScaleType.FIT_XY);
+        imageView.setId(++counterImages);
         imageView.setTag(name);
 
-        addedImages.add(name);
+        addedImages.put(counterImages, name);
         binding.linearPhoto.addView(imageView);
-    }
-
-    private List<String> addedImages = new ArrayList<>();
-
-    @Nullable
-    public Uri getImageUri(Context inContext, Bitmap inImage) {
-        @Nullable Uri uribt = null;
-        try {
-            ByteArrayOutputStream bytes = new ByteArrayOutputStream();
-            inImage = Bitmap.createScaledBitmap(inImage, inImage.getWidth(), inImage.getHeight(), true);
-
-            inImage.compress(Bitmap.CompressFormat.PNG, 100, bytes);
-            String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Image"
-                    + new Random().nextInt() + ".jpeg", null);
-            uribt = Uri.parse(path);
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_SHORT).show();
-        }
-//        uribt = bitmapToUriConverter(inImage);
-        return uribt;
     }
 
     public Bitmap getResizedBitmap(Bitmap bm, float newWidth, float newHeight) {
@@ -332,6 +310,10 @@ public class TaskFragment extends FragmentBase {
         float scaleHeight = ((float) newHeight) / height;
         Matrix matrix = new Matrix();
         matrix.postScale(scaleWidth, scaleHeight);
+
+//        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+//        BitmapFactory.decodeByteArray(byteArrayOutputStream, 0, )
+//        profileImage.setImageBitmap(Bitmap.createScaledBitmap(b, 120, 120, false));
 
         Bitmap resizedBitmap = Bitmap.createBitmap(
                 bm, 0, 0, width, height, matrix, false);
@@ -373,9 +355,21 @@ public class TaskFragment extends FragmentBase {
             }
         }
 
-        if (isDone)
-            getParentFragmentManager().popBackStackImmediate();
-        else {
+        if (isDone) {
+            for (Map.Entry<Integer, Uri> i : addedImages.entrySet()) {
+                File file = new File(i.getValue().getPath());
+                file.deleteOnExit();
+            }
+
+            addedImages.clear();
+
+            try {
+                getParentFragmentManager().popBackStackImmediate();
+            }catch (Exception e){
+                e.printStackTrace();
+            }
+
+        } else {
             binding.progressBarTask.setVisibility(View.VISIBLE);
             binding.mtaskLayout.setVisibility(View.GONE);
         }
@@ -388,6 +382,28 @@ public class TaskFragment extends FragmentBase {
 
     public void onClickSendComplete(View view) {
         sendComplete();
+    }
+
+    public String getFileName(Uri uri, ContentResolver contentResolver) {
+        String result = null;
+        if (uri.getScheme().equals("content")) {
+            Cursor cursor = contentResolver.query(uri, null, null, null, null);
+            try {
+                if (cursor != null && cursor.moveToFirst()) {
+                    result = cursor.getString(cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME));
+                }
+            } finally {
+                cursor.close();
+            }
+        }
+        if (result == null) {
+            result = uri.getPath();
+            int cut = result.lastIndexOf('/');
+            if (cut != -1) {
+                result = result.substring(cut + 1);
+            }
+        }
+        return result;
     }
 
     protected void sendComplete() {
@@ -428,21 +444,26 @@ public class TaskFragment extends FragmentBase {
                 .method(HTTPClient.METHOD_SEND.POST)
                 .callback(this);
 
-        for (int i = 0; i <= binding.linearPhoto.getChildCount() - 1; i++) {
-            if (binding.linearPhoto.getChildAt(i) instanceof ImageView) {
-                ImageView imageView = (ImageView) binding.linearPhoto.getChildAt(i);
-                Bitmap bitmap = ((BitmapDrawable) imageView.getDrawable()).getBitmap();
+        ContentResolver contentResolver = getContext().getContentResolver();
+        for (Map.Entry<Integer, Uri> i : addedImages.entrySet()) {
+            try {
+                Uri uri = i.getValue();
+                String fileName = getFileName(uri, contentResolver);
+
+                InputStream inputStream = contentResolver.openInputStream(i.getValue());
+                byte[] data = HTTPClient.HTTPProcess.getBytes(inputStream);
+
                 HttpFile httpFile = new HttpFile();
 
-                UUID uuidFile = UUID.randomUUID();
-                String uuidFileString = "Image_" + uuid.toString().replace('-', '_');
-
-                httpFile.FileName = String.format("%1$s.jpeg", uuidFileString);
-                httpFile.Name = uuidFileString;
-                httpFile.Data = bitmap;
+                httpFile.FileName = fileName;
+                httpFile.Name = fileName.substring(0, fileName.lastIndexOf((int) '.'));
+                httpFile.Data = Base64.encode(data, Base64.DEFAULT);
                 httpFile.ContentDesposition = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
                 httpFile.ContentType = "Content-Type: image/jpeg";
                 client.addFile(httpFile);
+
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         }
 
@@ -460,6 +481,7 @@ public class TaskFragment extends FragmentBase {
         client.addFile(objectJson);
 
         client.build().setNameEvent("update").sendAsync();
+
     }
 
     @Override
@@ -478,7 +500,7 @@ public class TaskFragment extends FragmentBase {
     }
 
     @Override
-    public void CallBackPress(){
+    public void CallBackPress() {
 
     }
 
@@ -486,6 +508,6 @@ public class TaskFragment extends FragmentBase {
     public void onDestroy() {
         super.onDestroy();
 
-        ((MainActivity)getActivity()).removeListenerCallbackPress(this);
+        ((MainActivity) getActivity()).removeListenerCallbackPress(this);
     }
 }

@@ -105,10 +105,11 @@ public class HTTPClient implements ICallbackResponse {
         send();
     }
 
-    public void send() {
+    @Nullable
+    public ResponseResult send() {
         try {
-            HTTPClient.HTTPProcess.getResponseHTTP(
-                    this,
+            return HTTPClient.HTTPProcess.getResponseHTTP(
+                    null,
                     urlString,
                     path,
                     user,
@@ -122,26 +123,42 @@ public class HTTPClient implements ICallbackResponse {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return null;
     }
 
-    public static class SendRequesAsync extends AsyncTask<HTTPClient, Void, Boolean> {
+    public static class SendRequesAsync extends AsyncTask<Void, Void, ResponseResult> {
+
+        @NonNull
+        private HTTPClient object;
+
+        public SendRequesAsync(HTTPClient iCallbackResponse) {
+            this.object = iCallbackResponse;
+        }
 
         @Override
-        protected Boolean doInBackground(HTTPClient... httpClients) {
+        protected ResponseResult doInBackground(Void... httpClients) {
             try {
 //                Thread.sleep(2000);
-                HTTPClient client = httpClients[0];
-                client.send();
-                return true;
+                return object.send();
             } catch (Exception e) {
-                return false;
+                return null;
             }
         }
 
+        @Override
+        protected void onPostExecute(ResponseResult responseResult) {
+            if (responseResult != null){
+                try {
+                    ((ICallbackResponse)object).CallbackResponse(responseResult.Body, responseResult.Code);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        }
     }
 
     public void sendAsync() {
-        new SendRequesAsync().execute(this);
+        new SendRequesAsync(this).execute();
     }
 
     public void sendAsync(String pathString) {
@@ -441,7 +458,7 @@ public class HTTPClient implements ICallbackResponse {
         }
 
         @NonNull
-        static String readStream(InputStream in) {
+        public static String readStream(InputStream in) {
             BufferedReader reader = null;
             StringBuffer response = new StringBuffer();
             try {
@@ -462,6 +479,27 @@ public class HTTPClient implements ICallbackResponse {
                 }
             }
             return response.toString();
+        }
+
+        public static byte[] getBytes(InputStream inputStream) throws IOException {
+
+            byte[] bytesResult = null;
+            ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+            int bufferSize = 1024;
+            byte[] buffer = new byte[bufferSize];
+            try {
+                int len;
+                while ((len = inputStream.read(buffer)) != -1) {
+                    byteBuffer.write(buffer, 0, len);
+                }
+                bytesResult = byteBuffer.toByteArray();
+            } finally {
+                // close the stream
+                try {
+                    byteBuffer.close();
+                } catch (IOException ignored) { /* do nothing */ }
+            }
+            return bytesResult;
         }
     }
 }
