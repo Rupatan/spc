@@ -52,4 +52,7 @@ public class TaskModel implements Serializable {
     @NonNull
     @SerializedName("ЕстьЗадача")
     public boolean HaveTask = false;
+
+    @SerializedName("ВидРаботы")
+    public TypeWork TypeWork;
 }

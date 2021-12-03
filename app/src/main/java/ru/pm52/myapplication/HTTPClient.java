@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
+import java.lang.reflect.Field;
 import java.net.Authenticator;
 import java.net.HttpURLConnection;
 import java.net.PasswordAuthentication;
@@ -28,6 +29,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+
+import ru.pm52.myapplication.Model.AuthRepository;
+import ru.pm52.myapplication.Model.ModelContext;
 
 public class HTTPClient implements ICallbackResponse {
 
@@ -85,19 +89,36 @@ public class HTTPClient implements ICallbackResponse {
     @Nullable
     private List<HttpFile> files;
 
-    private HTTPClient(Builder builder) {
-        this.urlString = builder.urlString;
-        this.path = builder.path;
-        this.callback = builder.callback;
-        this.methodRequest = builder.methodRequest;
-        this.password = builder.password;
-        this.bodyRequest = builder.bodyRequest;
-        this.user = builder.user;
-        this.header = builder.header;
-        this.notify = builder.notify;
+    @NonNull
+    private boolean isJson = false;
 
-        this.nameEvent = builder.nameEvent;
-        this.files = builder.files;
+    private HTTPClient(Builder builder) {
+        //this.urlString = builder.urlString;
+//        this.path = builder.path;
+//        this.callback = builder.callback;
+//        this.methodRequest = builder.methodRequest;
+//        this.password = builder.password;
+//        this.bodyRequest = builder.bodyRequest;
+//        this.user = builder.user;
+//        this.header = builder.header;
+//        this.notify = builder.notify;
+//
+//        this.nameEvent = builder.nameEvent;
+//        this.files = builder.files;
+        Class<HTTPClient> clientClass = HTTPClient.class;
+        for (Field f : builder.getClass().getDeclaredFields()) {
+            try {
+                f.setAccessible(true);
+                Object value = f.get(builder);
+                String name = f.getName();
+                Field field = clientClass.getDeclaredField(name);
+                field.setAccessible(true);
+                field.set(this, value);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+
     }
 
     public void send(String pathString) {
@@ -147,9 +168,9 @@ public class HTTPClient implements ICallbackResponse {
 
         @Override
         protected void onPostExecute(ResponseResult responseResult) {
-            if (responseResult != null){
+            if (responseResult != null) {
                 try {
-                    ((ICallbackResponse)object).CallbackResponse(responseResult.Body, responseResult.Code);
+                    ((ICallbackResponse) object).CallbackResponse(responseResult.Body, responseResult.Code);
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
@@ -191,6 +212,9 @@ public class HTTPClient implements ICallbackResponse {
         @Nullable
         private List<HttpFile> files;
 
+        @NonNull
+        private boolean isJson = false;
+
         public HTTPClient build() {
             return new HTTPClient(this);
         }
@@ -208,6 +232,11 @@ public class HTTPClient implements ICallbackResponse {
                 header = new HashMap<>();
 
             header.put(key, value);
+            return this;
+        }
+
+        public Builder setContentJson(boolean isJson) {
+            this.isJson = isJson;
             return this;
         }
 
@@ -500,6 +529,28 @@ public class HTTPClient implements ICallbackResponse {
                 } catch (IOException ignored) { /* do nothing */ }
             }
             return bytesResult;
+        }
+
+        public static String getUID() {
+            UUID uuid = UUID.randomUUID();
+            String uuidAsString = uuid.toString().replace('-', '_');
+            return uuidAsString;
+        }
+
+        public static Builder getCustomBuilder(String path) {
+            AuthRepository authRepository = AuthRepository.getInstance();
+            String uidString = HTTPClient.HTTPProcess.getUID();
+
+            HTTPClient.Builder client = new HTTPClient.Builder(ModelContext.URLBase)
+                    .addHeader("Expires", "Mon, 26 Jul 1997 05:00:00 GMT")
+                    .addHeader("Cache-Control", "no-store, no-cache, must-revalidate")
+                    .addHeader("Cache-Control", "post-check=0, pre-check=0")
+                    .addHeader("Pragma", "no-cache")
+                    .authentication(authRepository.getUsername(), authRepository.getPassword())
+                    .pathURL(path)
+                    .method(HTTPClient.METHOD_SEND.POST);
+
+            return client;
         }
     }
 }

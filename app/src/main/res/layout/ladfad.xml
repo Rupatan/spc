@@ -176,6 +176,17 @@
                         android:maxLength="3"
                         android:minWidth="60dp"
                         android:textAlignment="center" />
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="Вид работы"
+                        />
+                    <Spinner
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/typeWork"
+                        android:gravity="center"
+                        android:layout_gravity="center"/>
                 </androidx.appcompat.widget.LinearLayoutCompat>
 
                 <TextView
@@ -193,11 +204,15 @@
                     android:gravity="start|top"
                     android:inputType="textMultiLine" />
 
-                <androidx.appcompat.widget.AppCompatCheckBox
-                    android:layout_width="match_parent"
+<!--                <androidx.appcompat.widget.AppCompatCheckBox-->
+<!--                    android:layout_width="match_parent"-->
+<!--                    android:layout_height="wrap_content"-->
+<!--                    android:text="Задача"-->
+<!--                    android:id="@+id/haveTask"/>-->
+                <TextView
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Задача"
-                    android:id="@+id/haveTask"/>
+                    android:text="Задача для руководителя"/>
 
                 <EditText
                     android:id="@+id/textSubtask"
@@ -206,8 +221,7 @@
                     android:layout_margin="2dp"
                     android:ems="10"
                     android:gravity="start|top"
-                    android:inputType="textMultiLine"
-                    android:visibility="gone"/>
+                    android:inputType="textMultiLine"/>
 
             </androidx.appcompat.widget.LinearLayoutCompat>
         </androidx.core.widget.NestedScrollView>

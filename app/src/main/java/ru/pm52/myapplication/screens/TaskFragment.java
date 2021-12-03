@@ -39,8 +39,11 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ArrayAdapter;
+import android.widget.BaseAdapter;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultCallback;
@@ -88,14 +91,57 @@ import ru.pm52.myapplication.MainActivity;
 import ru.pm52.myapplication.Model.AuthRepository;
 import ru.pm52.myapplication.Model.ModelContext;
 import ru.pm52.myapplication.Model.TaskModel;
+import ru.pm52.myapplication.Model.TypeWork;
 import ru.pm52.myapplication.R;
 import ru.pm52.myapplication.ResponseResult;
 import ru.pm52.myapplication.ViewModel.TaskViewModel;
 import ru.pm52.myapplication.databinding.AlertDialogChoicePhotoBinding;
 import ru.pm52.myapplication.databinding.FragmentTaskBinding;
 import ru.pm52.myapplication.databinding.LadfadBinding;
+import ru.pm52.myapplication.databinding.SpinnerItemBinding;
 
 public class TaskFragment extends FragmentBase {
+
+    public class TypeWorkArrayAdapter extends BaseAdapter {
+
+        private Context context;
+        private LayoutInflater inflater;
+
+        public TypeWorkArrayAdapter(@NonNull Context context) {
+            this.context = context;
+            inflater = LayoutInflater.from(context);
+        }
+
+        @Override
+        public int getCount() {
+            return ModelContext.typeWorkList.size();
+        }
+
+        @Override
+        public TypeWork getItem(int i) {
+            return ModelContext.typeWorkList.get(i);
+        }
+
+        @Override
+        public long getItemId(int i) {
+            return 0;
+        }
+
+        @Override
+        public View getView(int position, View convertView, ViewGroup parent) {
+            TypeWork typeWork = (TypeWork) getItem(position);
+
+            if (convertView == null) {
+                convertView = inflater.inflate(R.layout.spinner_item, parent, false);
+            }
+            TextView txt = (TextView) convertView.findViewById(R.id.name);
+            txt.setText(typeWork.Name);
+            txt.setTag(typeWork.Ref);
+
+            return convertView;
+        }
+
+    }
 
     @Nullable
     private INotify iNotify;
@@ -119,7 +165,6 @@ public class TaskFragment extends FragmentBase {
         ((MainActivity) getActivity()).addListenerCallbackPress(this);
     }
 
-
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -132,13 +177,7 @@ public class TaskFragment extends FragmentBase {
         binding = LadfadBinding.inflate(inflater, container, false);
 
         binding.addImage.setOnClickListener(this::onClick);
-        binding.haveTask.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                int visibility = b ? View.VISIBLE : View.GONE;
-                binding.textSubtask.setVisibility(visibility);
-            }
-        });
+
         viewModel.Task.observe(getViewLifecycleOwner(), new Observer<TaskModel>() {
             @Override
             public void onChanged(TaskModel taskModel) {
@@ -151,6 +190,9 @@ public class TaskFragment extends FragmentBase {
                 binding.contact.setText(taskModel.Contact);
                 binding.cotragent.setText(taskModel.Contragent);
                 binding.Description.setText(taskModel.Descritpion);
+
+                TypeWorkArrayAdapter adapter = new TypeWorkArrayAdapter(getContext());
+                binding.typeWork.setAdapter(adapter);
 
             }
         });
@@ -365,7 +407,7 @@ public class TaskFragment extends FragmentBase {
 
             try {
                 getParentFragmentManager().popBackStackImmediate();
-            }catch (Exception e){
+            } catch (Exception e) {
                 e.printStackTrace();
             }
 
@@ -427,8 +469,9 @@ public class TaskFragment extends FragmentBase {
         }
 
         taskModel.Comment = String.valueOf(binding.Comment.getText());
-        taskModel.HaveTask = binding.haveTask.isChecked();
         taskModel.TextSubtask = String.valueOf(binding.textSubtask.getText());
+        taskModel.HaveTask = !taskModel.TextSubtask.trim().isEmpty();
+        taskModel.TypeWork = (TypeWork) binding.typeWork.getSelectedItem();
 
         UUID uuid = UUID.randomUUID();
         String uuidAsString = uuid.toString().replace('-', '_');

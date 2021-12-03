@@ -3,13 +3,12 @@ package ru.pm52.myapplication.ViewModel;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
+import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -19,7 +18,9 @@ import java.util.List;
 
 import ru.pm52.myapplication.Model.AuthModel;
 import ru.pm52.myapplication.Model.AuthRepository;
+import ru.pm52.myapplication.Model.ModelContext;
 import ru.pm52.myapplication.Model.TaskModel;
+import ru.pm52.myapplication.Model.TypeWork;
 
 public class AuthViewModel extends ViewModelBase {
 
@@ -53,16 +54,33 @@ public class AuthViewModel extends ViewModelBase {
             if (code == 200) {
                 String stringJson = params[0].toString();
                 try {
-                    Type listType = new TypeToken<ArrayList<TaskModel>>(){}.getType();
+                    Type listType = new TypeToken<ArrayList<TaskModel>>() {
+                    }.getType();
                     JSONObject json = new JSONObject(stringJson);
                     if (json.getInt("status") == 1) {
-                        String stringTasks = json.getJSONObject("data").getJSONArray("Задачи").toString();
+                        JSONObject dataObject = json.getJSONObject("data");
+                        String stringTasks = dataObject.getJSONArray("Задачи").toString();
 
-                        List<TaskModel> lst = new GsonBuilder()
+                        Gson gson = new GsonBuilder()
                                 .setPrettyPrinting()
                                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                                .create()
-                                .fromJson(stringTasks, listType);
+                                .create();
+
+                        Object objectListTypeWork = dataObject.opt("ВидыРабот");
+                        if (objectListTypeWork instanceof JSONArray) {
+                            JSONArray listTypeWork = (JSONArray) objectListTypeWork;
+                            for (int i = 0; i < listTypeWork.length(); i++) {
+                                JSONObject jObject = listTypeWork.getJSONObject(i);
+                                ModelContext.typeWorkList.add(new TypeWork(jObject.getString("Ссылка"), jObject.getString("Наименование")));
+                            }
+                        }
+                        //getJSONArray("ВидыРабот").toString();
+//                        if (!stringTypeWorks.isEmpty()) {
+//                            ModelContext.typeWorkList.addAll(gson.fromJson(stringTypeWorks, new TypeToken<List<TypeWork>>() {
+//                            }.getType()));
+//                        }
+
+                        List<TaskModel> lst = gson.fromJson(stringTasks, listType);
 
                         _isLogin.postValue(true);
                         listTasks.postValue(lst);
@@ -71,7 +89,7 @@ public class AuthViewModel extends ViewModelBase {
                     e.printStackTrace();
                     _isLogin.postValue(false);
                 }
-            }else{
+            } else {
                 _isLogin.postValue(false);
             }
         }
