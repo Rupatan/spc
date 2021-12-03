@@ -263,7 +263,7 @@ public class TaskFragment extends FragmentBase {
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(
                 getContext());
 //        builder.setView(R.layout.alert_dialog_choice_photo);
-        builder.setTitle("Выбор");
+        //builder.setTitle("Выбор");
 
         builder.setItems(options, new DialogInterface.OnClickListener() {
             @Override
