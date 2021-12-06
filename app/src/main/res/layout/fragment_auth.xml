@@ -32,22 +32,53 @@
         app:layout_constraintTop_toBottomOf="@+id/login" />
 
     <FrameLayout
+        android:id="@+id/frameLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/password"
-        >
-        <Button android:id="@+id/buttonEnter"
-            android:layout_gravity="center"
+        app:layout_constraintTop_toBottomOf="@+id/password">
+
+        <Button
+            android:id="@+id/buttonEnter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/txtButtonEnter"/>
+            android:layout_gravity="center"
+            android:text="@string/txtButtonEnter" />
+
         <ProgressBar
             android:id="@+id/progressEnter"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center" android:visibility="gone"/>
+            android:layout_gravity="center"
+            android:visibility="gone" />
     </FrameLayout>
+
+    <EditText
+        android:id="@+id/database"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:hint="База данных..."
+        android:text="Torg83_debug_Alehin"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="@+id/password"
+        app:layout_constraintStart_toStartOf="@+id/password"
+        app:layout_constraintTop_toBottomOf="@+id/frameLayout" />
+
+    <EditText
+        android:id="@+id/server"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:ems="10"
+        android:hint="Сервер..."
+        android:text="95.79.48.85:8008"
+        android:inputType="textPersonName"
+        app:layout_constraintEnd_toEndOf="@+id/database"
+        app:layout_constraintStart_toStartOf="@+id/database"
+        app:layout_constraintTop_toBottomOf="@+id/database" />
+
 </androidx.constraintlayout.widget.ConstraintLayout>

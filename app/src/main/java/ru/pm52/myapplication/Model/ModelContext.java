@@ -26,7 +26,8 @@ import ru.pm52.myapplication.ICallbackResponse;
 
 
 public class ModelContext {
-    public final static String URLBase = "http://95.79.48.85:8008/Torg83_debug_Alehin/hs/pmSPC";
+//    public static String URLBase = "http://95.79.48.85:8008/Torg83_debug_Alehin/hs/pmSPC";
+    public static String URLBase = "http://%1$s/%2$s/hs/pmSPC";
 
     @NonNull
     public static List<TypeWork> typeWorkList = new ArrayList<>();

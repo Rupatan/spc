@@ -5,6 +5,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -38,6 +39,9 @@ public class AuthFragment extends FragmentBase implements View.OnClickListener {
         binding = FragmentAuthBinding.inflate(inflater, container, false);
 
         viewModel = new ViewModelProvider(this, new Factory()).get(AuthViewModel.class);
+        binding.database.setText(viewModel.getDatabase());
+        binding.server.setText(viewModel.getServer());
+        binding.login.setText(viewModel.getLogin());
 
         viewModel.ListTasks.observe(getViewLifecycleOwner(), new Observer<List<TaskModel>>() {
             @Override
@@ -62,8 +66,10 @@ public class AuthFragment extends FragmentBase implements View.OnClickListener {
         viewModel.isLogin.observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean isLogin) {
-                if (!isLogin)
+                if (!isLogin) {
                     setVisibilityLogin(false);
+                    Toast.makeText(getContext(), viewModel.MessageLogin.getValue(), Toast.LENGTH_LONG).show();
+                }
             }
         });
 
@@ -88,8 +94,15 @@ public class AuthFragment extends FragmentBase implements View.OnClickListener {
         b.setVisibility(View.GONE);
         binding.progressEnter.setVisibility(View.VISIBLE);
 
-        viewModel.login(binding.login.getText().toString(),
-                binding.password.getText().toString(), "login");
+        try {
+            viewModel.login(binding.login.getText().toString(),
+                    binding.password.getText().toString(),
+                    binding.database.getText().toString(),
+                    binding.server.getText().toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
 

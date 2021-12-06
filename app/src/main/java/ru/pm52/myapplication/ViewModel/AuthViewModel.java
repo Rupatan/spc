@@ -24,6 +24,8 @@ import ru.pm52.myapplication.Model.TypeWork;
 
 public class AuthViewModel extends ViewModelBase {
 
+    public static final String NAME_EVENT_LOGIN = "login";
+
     private final AuthRepository repository;
 
     private final MutableLiveData<AuthModel> _authModel = new MutableLiveData<>();
@@ -35,6 +37,9 @@ public class AuthViewModel extends ViewModelBase {
     private final MutableLiveData<List<TaskModel>> listTasks = new MutableLiveData<>();
     public final LiveData<List<TaskModel>> ListTasks = listTasks;
 
+    private final MutableLiveData<String> messageLogin = new MutableLiveData<>();
+    public final LiveData<String> MessageLogin = messageLogin;
+
     public LiveData<Boolean> getIsLogin() {
         return isLogin;
     }
@@ -43,13 +48,25 @@ public class AuthViewModel extends ViewModelBase {
         this.repository = repository;
     }
 
-    public void login(String username, String password, @Nullable String nameEvent) {
-        repository.login(username, password, nameEvent, this);
+    public String getDatabase(){
+        return repository.getDataBase();
+    }
+
+    public String getServer(){
+        return repository.getServer();
+    }
+
+    public String getLogin(){
+        return repository.getUsername();
+    }
+
+    public void login(String username, String password, String _database, String _server) throws Exception {
+        repository.login(username, password, _database, _server, NAME_EVENT_LOGIN, this);
     }
 
     @Override
     public void NotifyResponse(String eventString, Object... params) {
-        if (eventString.equals("login")) {
+        if (eventString.equals(NAME_EVENT_LOGIN)) {
             int code = (int) params[1];
             if (code == 200) {
                 String stringJson = params[0].toString();
@@ -74,12 +91,6 @@ public class AuthViewModel extends ViewModelBase {
                                 ModelContext.typeWorkList.add(new TypeWork(jObject.getString("Ссылка"), jObject.getString("Наименование")));
                             }
                         }
-                        //getJSONArray("ВидыРабот").toString();
-//                        if (!stringTypeWorks.isEmpty()) {
-//                            ModelContext.typeWorkList.addAll(gson.fromJson(stringTypeWorks, new TypeToken<List<TypeWork>>() {
-//                            }.getType()));
-//                        }
-
                         List<TaskModel> lst = gson.fromJson(stringTasks, listType);
 
                         _isLogin.postValue(true);
@@ -90,8 +101,13 @@ public class AuthViewModel extends ViewModelBase {
                     _isLogin.postValue(false);
                 }
             } else {
+                if (code == -1)
+                    messageLogin.postValue((String) params[0]);
+
                 _isLogin.postValue(false);
+
             }
+
         }
     }
 }
