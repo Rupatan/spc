@@ -177,11 +177,13 @@ public class AuthRepository implements INotify {
                 db.close();
 
                 ModelContext.URLBase = String.format(ModelContext.URLBase, model.getServer(), model.getBase());
-
-                if (objectNotify != null)
-                    objectNotify.NotifyResponse(AuthViewModel.NAME_EVENT_LOGIN, params[0], params[1]);
             }
+
         }
+
+        if (objectNotify != null)
+            objectNotify.NotifyResponse(AuthViewModel.NAME_EVENT_LOGIN, params[0], params[1]);
+
     }
 
     public boolean insertDB(SQLiteDatabase db, String table, String nameColumn, String value) {
