@@ -15,7 +15,7 @@ import androidx.fragment.app.Fragment;
 public abstract class FragmentBase extends Fragment implements INotify, MainActivity.ICallBackPress {
 
     @Override
-    public void NotifyResponse(String eventString, Object... params) throws InterruptedException {
+    public void NotifyResponse(String eventString, Object... params) {
 
     }
 

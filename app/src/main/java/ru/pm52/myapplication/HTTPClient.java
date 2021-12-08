@@ -36,7 +36,7 @@ import ru.pm52.myapplication.Model.ModelContext;
 public class HTTPClient implements ICallbackResponse {
 
     @Override
-    public void CallbackResponse(String content, int responseCode) throws Exception {
+    public void CallbackResponse(String content, int responseCode) {
         if (callback != null)
             callback.CallbackResponse(content, responseCode);
 
@@ -169,11 +169,8 @@ public class HTTPClient implements ICallbackResponse {
         @Override
         protected void onPostExecute(ResponseResult responseResult) {
             if (responseResult != null) {
-                try {
-                    ((ICallbackResponse) object).CallbackResponse(responseResult.Body, responseResult.Code);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
+                ((ICallbackResponse) object).CallbackResponse(responseResult.Body, responseResult.Code);
+
             }
         }
     }
@@ -337,12 +334,16 @@ public class HTTPClient implements ICallbackResponse {
 
             HttpURLConnection con = getHTTPURLConnection(URLBase, path);
 
-            if (user != null && password != null)
-                Authenticator.setDefault(new Authenticator() {
-                    protected PasswordAuthentication getPasswordAuthentication() {
-                        return new PasswordAuthentication(user, password.toCharArray());
-                    }
-                });
+            if (user != null && password != null) {
+//                Authenticator.setDefault(new Authenticator() {
+//                    protected PasswordAuthentication getPasswordAuthentication() {
+//                        return new PasswordAuthentication(user, password.toCharArray());
+//                    }
+//                });
+                String basicAuth = String.format("%1$s:%2$s", user, password);
+                String base64Basic = Base64.encodeToString(basicAuth.getBytes(StandardCharsets.UTF_8), Base64.NO_WRAP);
+                headers.put("Authorization", String.format("Basic %1$s", base64Basic));
+            }
 
             String methodString = METHOD_SEND.GET.toString();
             if (method != null)

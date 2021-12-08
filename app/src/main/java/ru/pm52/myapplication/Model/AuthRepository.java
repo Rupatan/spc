@@ -84,7 +84,7 @@ public class AuthRepository implements INotify {
         if (database.isEmpty()
                 || server.isEmpty()
                 || username.isEmpty()
-                || password.isEmpty()) {
+) {
             String msg = "Не заполнены обязательные поля для авторизации";
             if (callback != null) {
                 callback.NotifyResponse(nameEvent, msg, -1);
@@ -164,7 +164,7 @@ public class AuthRepository implements INotify {
     }
 
     @Override
-    public void NotifyResponse(String eventString, Object... params) throws Exception {
+    public void NotifyResponse(String eventString, Object... params) {
         if (eventString.equals(AuthViewModel.NAME_EVENT_LOGIN)) {
             int code = (int) params[1];
             if (code == 200) {

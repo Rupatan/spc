@@ -148,7 +148,7 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
     }
 
     @Override
-    public void NotifyResponse(String eventString, Object... params) throws InterruptedException {
+    public void NotifyResponse(String eventString, Object... params)  {
         //if ()
     }
 }

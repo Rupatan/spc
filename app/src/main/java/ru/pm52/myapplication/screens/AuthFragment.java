@@ -1,5 +1,6 @@
 package ru.pm52.myapplication.screens;
 
+import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,6 +19,7 @@ import androidx.lifecycle.ViewModelProvider;
 
 import java.util.List;
 
+import ru.pm52.myapplication.DBHelper;
 import ru.pm52.myapplication.FragmentBase;
 import ru.pm52.myapplication.ICallbackResponse;
 import ru.pm52.myapplication.Model.AuthModel;
@@ -38,10 +40,25 @@ public class AuthFragment extends FragmentBase implements View.OnClickListener {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         binding = FragmentAuthBinding.inflate(inflater, container, false);
 
+//        DBHelper dbHelper = new DBHelper();
+//        SQLiteDatabase db = dbHelper.getWritableDB();
+//        db.execSQL("DELETE FROM SETTINGS");
+
         viewModel = new ViewModelProvider(this, new Factory()).get(AuthViewModel.class);
-        binding.database.setText(viewModel.getDatabase());
-        binding.server.setText(viewModel.getServer());
+
+        String dbString = viewModel.getDatabase();
+        if (dbString.isEmpty())
+            dbString = "Torg83";
+        binding.database.setText(dbString);
+
+        String serverString = viewModel.getServer();
+        if (serverString.isEmpty())
+            serverString = "95.79.48.85:8008";
+        binding.server.setText(serverString);
+
         binding.login.setText(viewModel.getLogin());
+
+        binding.login.setText("Алехин Денис");
 
         viewModel.ListTasks.observe(getViewLifecycleOwner(), new Observer<List<TaskModel>>() {
             @Override

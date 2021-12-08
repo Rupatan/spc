@@ -20,7 +20,7 @@ public class TaskRepository implements INotify {
 
 
     @Override
-    public void NotifyResponse(String eventString, Object... params) throws Exception {
+    public void NotifyResponse(String eventString, Object... params)  {
         if (eventString.equals(TYPE_WORKS)){
             int code = (int)params[0];
             if (code == 200){

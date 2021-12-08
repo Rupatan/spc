@@ -397,6 +397,8 @@ public class TaskFragment extends FragmentBase {
             }
         }
 
+        Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
+
         if (isDone) {
             for (Map.Entry<Integer, Uri> i : addedImages.entrySet()) {
                 File file = new File(i.getValue().getPath());
@@ -412,8 +414,8 @@ public class TaskFragment extends FragmentBase {
             }
 
         } else {
-            binding.progressBarTask.setVisibility(View.VISIBLE);
-            binding.mtaskLayout.setVisibility(View.GONE);
+            binding.progressBarTask.setVisibility(View.GONE);
+            binding.mtaskLayout.setVisibility(View.VISIBLE);
         }
     }
 
