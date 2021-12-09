@@ -66,7 +66,7 @@ public class RecycleViewAdapter
             b.getRoot().setTag(taskModel);
             b.Name.setText(taskModel.Name);
             SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-            b.DatePerfomance.setText(formatter.format(taskModel.DateTime));
+            b.DatePerfomance.setText(formatter.format(taskModel.DatePerfomance));
             b.Number.setText(taskModel.Number);
             b.Contact.setText(taskModel.Contact);
             b.Contragent.setText(taskModel.Contragent);
@@ -89,8 +89,10 @@ public class RecycleViewAdapter
                     txt.setText(isVisible ? "+" : "-");
                 }
             });
+
         }
     }
+
 
     @Override
     public int getItemCount() {

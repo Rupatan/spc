@@ -100,6 +100,9 @@ import ru.pm52.myapplication.databinding.FragmentTaskBinding;
 import ru.pm52.myapplication.databinding.LadfadBinding;
 import ru.pm52.myapplication.databinding.SpinnerItemBinding;
 
+import java.nio.file.*;
+import java.io.*;
+
 public class TaskFragment extends FragmentBase {
 
     public class TypeWorkArrayAdapter extends BaseAdapter {
@@ -262,9 +265,6 @@ public class TaskFragment extends FragmentBase {
                 "Закрыть"};
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(
                 getContext());
-//        builder.setView(R.layout.alert_dialog_choice_photo);
-        //builder.setTitle("Выбор");
-
         builder.setItems(options, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -273,16 +273,26 @@ public class TaskFragment extends FragmentBase {
 
                 if (which == 0) {
                     try {
-                        String imageFileName = String.format("/Image_%1$s", String.valueOf(new Random().nextInt()).replaceAll("-", ""));
-                        File storageDir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES);
-                        File image = File.createTempFile(imageFileName, ".jpeg", storageDir);
 
-                        uriPhoto = Uri.fromFile(image);
+                        String prefix = String.valueOf(new Random().nextInt()).replaceAll("-", "");
+                        String imageFileName = String.format("Image_%1$s.jpeg", prefix);
+
+                        File imagePath = Environment.getExternalStorageDirectory();
+                        File newFile = new File(imagePath, imageFileName);
+                        newFile.deleteOnExit();
+
+                        uriPhoto = FileProvider.getUriForFile(getContext(),
+                                "ru.pm52.myapplication.MainActivity.provider",
+                                newFile);
+
                         Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                         takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, uriPhoto);
+
+
                         startActivityForResult(takePhotoIntent, 0);
                     } catch (Exception e) {
                         e.printStackTrace();
+                        Toast.makeText(getContext(), e.getMessage(), Toast.LENGTH_LONG).show();
                     }
 
                 } else if (which == 1) {
@@ -502,7 +512,8 @@ public class TaskFragment extends FragmentBase {
 
                 httpFile.FileName = fileName;
                 httpFile.Name = fileName.substring(0, fileName.lastIndexOf((int) '.'));
-                httpFile.Data = Base64.encode(data, Base64.DEFAULT);
+//                httpFile.Data = Base64.encode(data, Base64.DEFAULT);
+                httpFile.Data = data;
                 httpFile.ContentDesposition = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
                 httpFile.ContentType = "Content-Type: image/jpeg";
                 client.addFile(httpFile);

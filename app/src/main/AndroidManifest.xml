@@ -6,6 +6,7 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature android:name="android.hardware.camera" android:required="true" />
 
     <application
         android:allowBackup="true"
@@ -16,10 +17,11 @@
         android:theme="@style/Theme.MyApplication"
         android:usesCleartextTraffic="true"
         android:name="ru.pm52.myapplication.App"
+        android:requestLegacyExternalStorage="true"
         >
 
         <provider
-            android:authorities="ru.pm52.myapplication.screens.TaskFragment.provider"
+            android:authorities="ru.pm52.myapplication.MainActivity.provider"
             android:name="androidx.core.content.FileProvider"
             android:grantUriPermissions="true"
             android:exported="false">
