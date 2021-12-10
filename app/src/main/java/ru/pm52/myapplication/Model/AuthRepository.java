@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
 import com.google.gson.GsonBuilder;
@@ -23,14 +24,11 @@ import ru.pm52.myapplication.ICallbackResponse;
 import ru.pm52.myapplication.INotify;
 import ru.pm52.myapplication.ViewModel.AuthViewModel;
 
-public class AuthRepository implements INotify {
+public class AuthRepository extends RepositoryBase {
 
     public static String NAME_COLUMN_DATABASE = "DATABASE";
     public static String NAME_COLUMN_SERVER = "SERVER";
     public static String NAME_COLUMN_USERNAME = "USERNAME";
-
-    @Nullable
-    private INotify objectNotify;
 
     @Nullable
     private static AuthRepository instance;
@@ -78,18 +76,17 @@ public class AuthRepository implements INotify {
                       String password,
                       String database,
                       String server,
-                      @Nullable String nameEvent,
-                      @Nullable INotify callback) throws Exception {
+                      @NonNull String nameEvent) throws Exception {
 
         if (database.isEmpty()
                 || server.isEmpty()
-                || username.isEmpty()
-) {
+                || username.isEmpty()) {
             String msg = "Не заполнены обязательные поля для авторизации";
-            if (callback != null) {
-                callback.NotifyResponse(nameEvent, msg, -1);
-                return;
-            }
+//            if (callback != null) {
+//                callback.NotifyResponse(nameEvent, msg, -1);
+//                return;
+//            }
+            super.NotifyResponse(nameEvent, msg, -1);
         }
 
         model.setLogin(username);
@@ -100,7 +97,6 @@ public class AuthRepository implements INotify {
         UUID uuid = UUID.randomUUID();
         String uuidAsString = uuid.toString().replace('-', '_');
 
-        objectNotify = callback;
         String urlBase = String.format(ModelContext.URLBase, server, database);
         HTTPClient.Builder builder = new HTTPClient.Builder(urlBase)
                 .addHeader("Content-type", "application/x-www-form-urlencoded")
@@ -109,7 +105,7 @@ public class AuthRepository implements INotify {
                 .addHeader("Cache-Control", "post-check=0, pre-check=0")
                 .addHeader("Pragma", "no-cache")
                 .authentication(username, password)
-                .pathURL("mobile/tasks/getlist?uid=" + uuidAsString)
+                .pathURL("mobile/auth/get?uid=" + uuidAsString)
                 .method(HTTPClient.METHOD_SEND.POST)
                 .callback(this);
 
@@ -180,10 +176,7 @@ public class AuthRepository implements INotify {
             }
 
         }
-
-        if (objectNotify != null)
-            objectNotify.NotifyResponse(AuthViewModel.NAME_EVENT_LOGIN, params[0], params[1]);
-
+        super.NotifyResponse(eventString, params);
     }
 
     public boolean insertDB(SQLiteDatabase db, String table, String nameColumn, String value) {

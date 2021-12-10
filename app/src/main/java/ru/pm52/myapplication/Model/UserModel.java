@@ -10,4 +10,7 @@ public class UserModel {
     @SerializedName("Наименование")
     public String Name;
 
+    @SerializedName("ЭтоПрограммист")
+    public boolean IsProgrammist;
+
 }

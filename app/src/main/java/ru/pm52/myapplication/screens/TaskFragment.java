@@ -181,21 +181,21 @@ public class TaskFragment extends FragmentBase {
 
         binding.addImage.setOnClickListener(this::onClick);
 
+        binding.Name.setText(taskModel.Name);
+        SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
+        binding.txtDate.setText(formatter.format(taskModel.DateTime));
+        binding.txtNumber.setText(taskModel.Number);
+        binding.contact.setText(taskModel.Contact);
+        binding.cotragent.setText(taskModel.Contragent);
+        binding.Description.setText(taskModel.Descritpion);
+
+        TypeWorkArrayAdapter adapter = new TypeWorkArrayAdapter(getContext());
+        binding.typeWork.setAdapter(adapter);
+
         viewModel.Task.observe(getViewLifecycleOwner(), new Observer<TaskModel>() {
             @Override
             public void onChanged(TaskModel taskModel) {
-                binding.Name.setText(taskModel.Name);
 
-                @SuppressLint("SimpleDateFormat")
-                SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss");
-                binding.txtDate.setText(formatter.format(taskModel.DateTime));
-                binding.txtNumber.setText(taskModel.Number);
-                binding.contact.setText(taskModel.Contact);
-                binding.cotragent.setText(taskModel.Contragent);
-                binding.Description.setText(taskModel.Descritpion);
-
-                TypeWorkArrayAdapter adapter = new TypeWorkArrayAdapter(getContext());
-                binding.typeWork.setAdapter(adapter);
 
             }
         });
@@ -217,8 +217,8 @@ public class TaskFragment extends FragmentBase {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        String stringJson = new GsonBuilder().setPrettyPrinting().create().toJson(taskModel);
-        outState.putString("taskModel", stringJson);
+//        String stringJson = new GsonBuilder().setPrettyPrinting().create().toJson(taskModel);
+//        outState.putString("taskModel", stringJson);
     }
 
     @Override
@@ -513,6 +513,9 @@ public class TaskFragment extends FragmentBase {
                 httpFile.FileName = fileName;
                 httpFile.Name = fileName.substring(0, fileName.lastIndexOf((int) '.'));
 //                httpFile.Data = Base64.encode(data, Base64.DEFAULT);
+
+                // ТУТ ОПАСНОЕ МЕСТО ЧТО БЫ ЗАПУСКАТЬ В ОСНОВНОМ ПОТОКЕ
+                // НАДО ЗАПУСТИТЬ В ФОНОВОМ ПОТОКЕ
                 httpFile.Data = data;
                 httpFile.ContentDesposition = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
                 httpFile.ContentType = "Content-Type: image/jpeg";

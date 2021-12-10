@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/menuItemChoice"
+        android:title="Выбрать"
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/menuItemComplete"
+        android:title="Выполнить"
+        app:showAsAction="never" />
+
+    <item
+        android:id="@+id/menuItemGetBy"
+        android:title="Сдать"
+        app:showAsAction="never" />
+</menu>

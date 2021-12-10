@@ -58,7 +58,7 @@ public class AuthFragment extends FragmentBase implements View.OnClickListener {
 
         binding.login.setText(viewModel.getLogin());
 
-        binding.login.setText("Алехин Денис");
+//        binding.login.setText("Алехин Денис");
 
         viewModel.ListTasks.observe(getViewLifecycleOwner(), new Observer<List<TaskModel>>() {
             @Override
@@ -86,6 +86,13 @@ public class AuthFragment extends FragmentBase implements View.OnClickListener {
                 if (!isLogin) {
                     setVisibilityLogin(false);
                     Toast.makeText(getContext(), viewModel.MessageLogin.getValue(), Toast.LENGTH_LONG).show();
+                }else{
+                    FragmentManager f = getParentFragmentManager();
+                    Fragment fragment = f.getFragments().get(0);
+                    f.beginTransaction()
+                            .remove(fragment)
+                            .add(R.id.fragmentContainer, new TaskListFragment())
+                            .commit();
                 }
             }
         });

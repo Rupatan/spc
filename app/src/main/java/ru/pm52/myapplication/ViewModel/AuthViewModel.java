@@ -16,11 +16,13 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 
+import ru.pm52.myapplication.App;
 import ru.pm52.myapplication.Model.AuthModel;
 import ru.pm52.myapplication.Model.AuthRepository;
 import ru.pm52.myapplication.Model.ModelContext;
 import ru.pm52.myapplication.Model.TaskModel;
 import ru.pm52.myapplication.Model.TypeWork;
+import ru.pm52.myapplication.Model.UserModel;
 
 public class AuthViewModel extends ViewModelBase {
 
@@ -46,6 +48,7 @@ public class AuthViewModel extends ViewModelBase {
 
     public AuthViewModel(AuthRepository repository) {
         this.repository = repository;
+        this.repository.addListener(this, NAME_EVENT_LOGIN);
     }
 
     public String getDatabase(){
@@ -61,7 +64,7 @@ public class AuthViewModel extends ViewModelBase {
     }
 
     public void login(String username, String password, String _database, String _server) throws Exception {
-        repository.login(username, password, _database, _server, NAME_EVENT_LOGIN, this);
+        repository.login(username, password, _database, _server, NAME_EVENT_LOGIN);
     }
 
     @Override
@@ -76,12 +79,17 @@ public class AuthViewModel extends ViewModelBase {
                     JSONObject json = new JSONObject(stringJson);
                     if (json.getInt("status") == 1) {
                         JSONObject dataObject = json.getJSONObject("data");
-                        String stringTasks = dataObject.getJSONArray("Задачи").toString();
+//                        String stringTasks = dataObject.getJSONArray("Задачи").toString();
 
                         Gson gson = new GsonBuilder()
                                 .setPrettyPrinting()
                                 .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
                                 .create();
+
+                        UserModel user = gson.fromJson(dataObject.getJSONObject("Пользователь").toString(),
+                                UserModel.class);
+
+                        App.setUser(user);
 
                         Object objectListTypeWork = dataObject.opt("ВидыРабот");
                         if (objectListTypeWork instanceof JSONArray) {
@@ -91,10 +99,16 @@ public class AuthViewModel extends ViewModelBase {
                                 ModelContext.typeWorkList.add(new TypeWork(jObject.getString("Ссылка"), jObject.getString("Наименование")));
                             }
                         }
-                        List<TaskModel> lst = gson.fromJson(stringTasks, listType);
+//                        List<TaskModel> lst = gson.fromJson(stringTasks, listType);
 
                         _isLogin.postValue(true);
-                        listTasks.postValue(lst);
+//                        listTasks.postValue(lst);
+                    }else{
+                        JSONObject jsonObject = new JSONObject((String) params[0]);
+                        String msg = jsonObject.getString("info");
+
+                        messageLogin.postValue(msg);
+                        _isLogin.postValue(false);
                     }
                 } catch (JSONException e) {
                     e.printStackTrace();

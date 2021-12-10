@@ -4,6 +4,9 @@ import android.content.Context;
 import android.os.Bundle;
 import android.view.ContextThemeWrapper;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -28,6 +31,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
+import ru.pm52.myapplication.App;
 import ru.pm52.myapplication.FragmentBase;
 import ru.pm52.myapplication.HTTPClient;
 import ru.pm52.myapplication.IRecycleViewItemClick;
@@ -48,17 +52,16 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
 
     private boolean isNew = false;
     private boolean isRefresh = false;
-    private List<TaskModel> listTask;
     private boolean isCallbackPress = false;
 
     public TaskListFragment(@Nullable List<TaskModel> list) {
-        listTask = list;
         isNew = true;
-
     }
 
     public TaskListFragment() {
         this(null);
+
+        setHasOptionsMenu(App.getUser().IsProgrammist);
     }
 
     @Override
@@ -74,22 +77,23 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
 
         binding = FragmentTaskListBinding.inflate(inflater, container, false);
 
-        if (!isNew && !isCallbackPress) {
+        if (!isCallbackPress) {
             binding.swipeContainer.setRefreshing(true);
 
             viewModel.refresh();
-        } else if (savedInstanceState == null) {
-            viewModel.setListTasks(listTask);
-        } else listTask = viewModel.getTaskModelList();
-
-
-        binding.listTask.setAdapter(new RecycleViewAdapter(listTask, this));
+        }
+//        else if (savedInstanceState == null) {
+//            viewModel.setListTasks(listTask);
+//        } else listTask = viewModel.getTaskModelList();
 
         viewModel.ListTasks.observe(getViewLifecycleOwner(), new Observer<List<TaskModel>>() {
             @Override
             public void onChanged(List<TaskModel> taskModels) {
-                listTask = taskModels;
-                ((RecycleViewAdapter) Objects.requireNonNull(binding.listTask.getAdapter())).setList(taskModels);
+                RecycleViewAdapter adapter = (RecycleViewAdapter) binding.listTask.getAdapter();
+                if (adapter == null)
+                    binding.listTask.setAdapter(new RecycleViewAdapter(taskModels, TaskListFragment.this));
+                else
+                    adapter.setList(taskModels);
             }
         });
 
@@ -111,6 +115,25 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
         return binding.getRoot();
     }
 
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+
+        inflater.inflate(R.menu.menu_list_task_programmist, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.menuItemComplete: {
+
+                return true;
+            }
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+
+    }
     @Override
     public void onResume() {
         super.onResume();
@@ -143,12 +166,12 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
     }
 
     @Override
-    public void CallBackPress(){
+    public void CallBackPress() {
         isCallbackPress = true;
     }
 
     @Override
-    public void NotifyResponse(String eventString, Object... params)  {
+    public void NotifyResponse(String eventString, Object... params) {
         //if ()
     }
 }
