@@ -60,25 +60,25 @@ public class AuthFragment extends FragmentBase implements View.OnClickListener {
 
 //        binding.login.setText("Алехин Денис");
 
-        viewModel.ListTasks.observe(getViewLifecycleOwner(), new Observer<List<TaskModel>>() {
-            @Override
-            public void onChanged(List<TaskModel> listTask) {
-                if (!viewModel.isLogin.getValue()) {
-
-                    binding.progressEnter.setVisibility(View.GONE);
-                    binding.buttonEnter.setVisibility(View.VISIBLE);
-
-                    return;
-                }
-                FragmentManager f = getParentFragmentManager();
-                Fragment fragment = f.getFragments().get(0);
-                f.beginTransaction()
-                        .remove(fragment)
-                        .add(R.id.fragmentContainer, new TaskListFragment(listTask))
-                        .commit();
-
-            }
-        });
+//        viewModel.ListTasks.observe(getViewLifecycleOwner(), new Observer<List<TaskModel>>() {
+//            @Override
+//            public void onChanged(List<TaskModel> listTask) {
+//                if (!viewModel.isLogin.getValue()) {
+//
+//                    binding.progressEnter.setVisibility(View.GONE);
+//                    binding.buttonEnter.setVisibility(View.VISIBLE);
+//
+//                    return;
+//                }
+//                FragmentManager f = getParentFragmentManager();
+//                Fragment fragment = f.getFragments().get(0);
+//                f.beginTransaction()
+//                        .remove(fragment)
+//                        .add(R.id.fragmentContainer, new TaskListFragment(listTask))
+//                        .commit();
+//
+//            }
+//        });
 
         viewModel.isLogin.observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override

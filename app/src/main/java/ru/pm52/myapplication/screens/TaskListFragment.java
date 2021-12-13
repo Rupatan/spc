@@ -118,8 +118,8 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-
-        inflater.inflate(R.menu.menu_list_task_programmist, menu);
+        if (App.getUser().IsProgrammist)
+            inflater.inflate(R.menu.menu_list_task_programmist, menu);
     }
 
     @Override
@@ -134,6 +134,7 @@ public class TaskListFragment extends FragmentBase implements IRecycleViewItemCl
         }
 
     }
+
     @Override
     public void onResume() {
         super.onResume();
