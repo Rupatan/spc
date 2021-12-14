@@ -6,6 +6,8 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <EditText
+        android:singleLine="true"
+        android:lines="1"
         android:id="@+id/login"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
@@ -20,6 +22,8 @@
         app:layout_constraintVertical_bias="0.308" />
 
     <EditText
+        android:singleLine="true"
+        android:lines="1"
         android:id="@+id/password"
         android:layout_width="0dp"
         android:layout_height="wrap_content"

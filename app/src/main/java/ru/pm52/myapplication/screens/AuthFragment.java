@@ -43,6 +43,7 @@ public class AuthFragment extends FragmentBase implements View.OnClickListener {
 //        DBHelper dbHelper = new DBHelper();
 //        SQLiteDatabase db = dbHelper.getWritableDB();
 //        db.execSQL("DELETE FROM SETTINGS");
+//        db.close();
 
         viewModel = new ViewModelProvider(this, new Factory()).get(AuthViewModel.class);
 

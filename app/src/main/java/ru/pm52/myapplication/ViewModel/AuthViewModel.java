@@ -117,6 +117,7 @@ public class AuthViewModel extends ViewModelBase {
             } else {
                 if (code == -1)
                     messageLogin.postValue((String) params[0]);
+                else messageLogin.postValue("Ошибка авторизации");
 
                 _isLogin.postValue(false);
 
