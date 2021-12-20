@@ -10,11 +10,13 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Application;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ProviderInfo;
 import android.content.res.Resources;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -24,8 +26,10 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.opengl.Visibility;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Parcel;
 import android.os.StrictMode;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
@@ -94,7 +98,9 @@ import ru.pm52.myapplication.Model.TaskModel;
 import ru.pm52.myapplication.Model.TypeWork;
 import ru.pm52.myapplication.R;
 import ru.pm52.myapplication.ResponseResult;
+import ru.pm52.myapplication.ViewModel.Factory;
 import ru.pm52.myapplication.ViewModel.TaskViewModel;
+import ru.pm52.myapplication.ViewModel.ViewModelBase;
 import ru.pm52.myapplication.databinding.AlertDialogChoicePhotoBinding;
 import ru.pm52.myapplication.databinding.FragmentTaskBinding;
 import ru.pm52.myapplication.databinding.LadfadBinding;
@@ -127,7 +133,7 @@ public class TaskFragment extends FragmentBase {
 
         @Override
         public long getItemId(int i) {
-            return 0;
+            return i;
         }
 
         @Override
@@ -171,7 +177,7 @@ public class TaskFragment extends FragmentBase {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        viewModel = new ViewModelProvider(this).get(TaskViewModel.class);
+        viewModel = new ViewModelProvider(this, new Factory(getActivity())).get(TaskViewModel.class);
 
         if (savedInstanceState != null) {
             taskModel = viewModel.getTaskModel();
@@ -277,14 +283,15 @@ public class TaskFragment extends FragmentBase {
                         String prefix = String.valueOf(new Random().nextInt()).replaceAll("-", "");
                         String imageFileName = String.format("Image_%1$s.jpeg", prefix);
 
-                        File imagePath = Environment.getExternalStorageDirectory();
+                        File imagePath = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
                         File newFile = new File(imagePath, imageFileName);
-                        newFile.deleteOnExit();
+
+//                        newFile.deleteOnExit();
 
                         uriPhoto = FileProvider.getUriForFile(getContext(),
                                 "ru.pm52.myapplication.MainActivity.provider",
                                 newFile);
-
+//                        File f = FileProvider.getPathStrategy(getContext(), ViewModelBase.AUTHORITY).getFileForUri(uriPhoto);
                         Intent takePhotoIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                         takePhotoIntent.putExtra(MediaStore.EXTRA_OUTPUT, uriPhoto);
 
@@ -305,7 +312,6 @@ public class TaskFragment extends FragmentBase {
         AlertDialog dialog = builder.create();
         dialog.show();
     }
-
 
     @Override
     public void onActivityResult(int requestcode, int resultcode, Intent intent) {
@@ -351,7 +357,9 @@ public class TaskFragment extends FragmentBase {
         imageView.setId(++counterImages);
         imageView.setTag(name);
 
-        addedImages.put(counterImages, name);
+        viewModel.setAddedImages(counterImages, name);
+
+//        addedImages.put(counterImages, name);
         binding.linearPhoto.addView(imageView);
     }
 
@@ -410,12 +418,7 @@ public class TaskFragment extends FragmentBase {
         Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
 
         if (isDone) {
-            for (Map.Entry<Integer, Uri> i : addedImages.entrySet()) {
-                File file = new File(i.getValue().getPath());
-                file.deleteOnExit();
-            }
-
-            addedImages.clear();
+            viewModel.deleteImages();
 
             try {
                 getParentFragmentManager().popBackStackImmediate();
@@ -566,6 +569,8 @@ public class TaskFragment extends FragmentBase {
     @Override
     public void onDestroy() {
         super.onDestroy();
+
+        viewModel.deleteImages();
 
         ((MainActivity) getActivity()).removeListenerCallbackPress(this);
     }

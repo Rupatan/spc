@@ -1,7 +1,10 @@
 package ru.pm52.myapplication.ViewModel;
 
+import android.os.Environment;
+
 import androidx.lifecycle.ViewModel;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,6 +15,8 @@ import ru.pm52.myapplication.Model.TaskModel;
 public abstract class ViewModelBase extends ViewModel implements INotify {
 
     protected List<INotify> notifyList = new ArrayList<>();
+    public static final String AUTHORITY = "ru.pm52.myapplication.MainActivity.provider";
+    public static final File FILE_PATH_DCIM = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DCIM);
 
     public ViewModelBase() {
         super();
@@ -26,12 +31,12 @@ public abstract class ViewModelBase extends ViewModel implements INotify {
         notifyList.add(objectNotify);
     }
 
-    public void removeListener(INotify objectNotify){
+    public void removeListener(INotify objectNotify) {
         if (notifyList.contains(objectNotify))
             notifyList.remove(objectNotify);
     }
 
-    public void notifyObject(){
+    public void notifyObject() {
 //        for (INotify iNotify : notifyList)
 //            iNotify.NotifyResponse();
     }

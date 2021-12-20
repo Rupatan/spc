@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import ru.pm52.myapplication.INotify;
 
@@ -42,9 +43,9 @@ public class RepositoryBase implements INotify {
     @SuppressLint("NewApi")
     @Override
     public void NotifyResponse(String eventString, Object... params) {
-        notifyMap.forEach((iNotify, stringList) -> {
-            if (stringList.contains(eventString))
-                iNotify.NotifyResponse(eventString, params);
-        });
+        for (Map.Entry<INotify, List<String>> i : notifyMap.entrySet()) {
+            if (i.getValue().contains(eventString))
+                i.getKey().NotifyResponse(eventString, params);
+        }
     }
 }
