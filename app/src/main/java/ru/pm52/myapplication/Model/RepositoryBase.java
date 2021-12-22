@@ -40,7 +40,6 @@ public class RepositoryBase implements INotify {
 //            iNotify.NotifyResponse();
     }
 
-    @SuppressLint("NewApi")
     @Override
     public void NotifyResponse(String eventString, Object... params) {
         for (Map.Entry<INotify, List<String>> i : notifyMap.entrySet()) {

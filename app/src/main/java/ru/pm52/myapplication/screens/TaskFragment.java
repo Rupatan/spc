@@ -158,6 +158,7 @@ public class TaskFragment extends FragmentBase {
     private TaskViewModel viewModel;
     @Nullable
     private TaskModel taskModel;
+    private boolean sendRequest = false;
 
     public TaskFragment(TaskModel taskModel) {
         this.taskModel = taskModel;
@@ -178,9 +179,39 @@ public class TaskFragment extends FragmentBase {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         viewModel = new ViewModelProvider(this, new Factory(getActivity())).get(TaskViewModel.class);
+        viewModel.IsDone.observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean isDone) {
+                if (isDone){
+
+                }
+            }
+        });
+        viewModel.IsSend.observe(getViewLifecycleOwner(), new Observer<Boolean>() {
+            @Override
+            public void onChanged(Boolean isSend) {
+                if (isSend){
+                    binding.progressBarTask.setVisibility(View.VISIBLE);
+                    binding.mtaskLayout.setVisibility(View.GONE);
+                }else{
+                    binding.progressBarTask.setVisibility(View.GONE);
+                    binding.mtaskLayout.setVisibility(View.VISIBLE);
+                }
+            }
+        });
 
         if (savedInstanceState != null) {
             taskModel = viewModel.getTaskModel();
+
+            for (Map.Entry<Integer, Uri> i : viewModel.getAddedImages().entrySet()) {
+//                addImage();
+            }
+
+            sendRequest = savedInstanceState.getBoolean("sendRequest");
+            if (sendRequest){
+                binding.progressBarTask.setVisibility(View.GONE);
+                binding.mtaskLayout.setVisibility(View.VISIBLE);
+            }
         }
 
         binding = LadfadBinding.inflate(inflater, container, false);
@@ -198,17 +229,11 @@ public class TaskFragment extends FragmentBase {
         TypeWorkArrayAdapter adapter = new TypeWorkArrayAdapter(getContext());
         binding.typeWork.setAdapter(adapter);
 
-        viewModel.Task.observe(getViewLifecycleOwner(), new Observer<TaskModel>() {
-            @Override
-            public void onChanged(TaskModel taskModel) {
 
-
-            }
-        });
 
         //binding.button2.setOnClickListener(this::onClickSendComplete);
 
-        viewModel.setTask(taskModel);
+        //viewModel.setTask(taskModel);
 
         return binding.getRoot();
     }
@@ -223,6 +248,8 @@ public class TaskFragment extends FragmentBase {
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
+        outState.putBoolean("sendRequest", sendRequest);
+
 //        String stringJson = new GsonBuilder().setPrettyPrinting().create().toJson(taskModel);
 //        outState.putString("taskModel", stringJson);
     }
@@ -340,7 +367,7 @@ public class TaskFragment extends FragmentBase {
                     e.printStackTrace();
                 }
             } else {
-                Toast.makeText(getContext(), "Ошибка добавления фото", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Ошибка при добавлении фотографии", Toast.LENGTH_SHORT).show();
             }
         }
     }
@@ -357,7 +384,7 @@ public class TaskFragment extends FragmentBase {
         imageView.setId(++counterImages);
         imageView.setTag(name);
 
-        viewModel.setAddedImages(counterImages, name);
+        viewModel.addImage(counterImages, name);
 
 //        addedImages.put(counterImages, name);
         binding.linearPhoto.addView(imageView);
@@ -370,10 +397,6 @@ public class TaskFragment extends FragmentBase {
         float scaleHeight = ((float) newHeight) / height;
         Matrix matrix = new Matrix();
         matrix.postScale(scaleWidth, scaleHeight);
-
-//        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-//        BitmapFactory.decodeByteArray(byteArrayOutputStream, 0, )
-//        profileImage.setImageBitmap(Bitmap.createScaledBitmap(b, 120, 120, false));
 
         Bitmap resizedBitmap = Bitmap.createBitmap(
                 bm, 0, 0, width, height, matrix, false);
@@ -488,62 +511,65 @@ public class TaskFragment extends FragmentBase {
         taskModel.HaveTask = !taskModel.TextSubtask.trim().isEmpty();
         taskModel.TypeWork = (TypeWork) binding.typeWork.getSelectedItem();
 
-        UUID uuid = UUID.randomUUID();
-        String uuidAsString = uuid.toString().replace('-', '_');
-        AuthRepository authRepository = AuthRepository.getInstance();
+        viewModel.sendComplete();
 
-        HTTPClient.Builder client = new HTTPClient.Builder(ModelContext.URLBase)
-                .addHeader("Expires", "Mon, 26 Jul 1997 05:00:00 GMT")
-                .addHeader("Cache-Control", "no-store, no-cache, must-revalidate")
-                .addHeader("Cache-Control", "post-check=0, pre-check=0")
-                .addHeader("Pragma", "no-cache")
-                .authentication(authRepository.getUsername(), authRepository.getPassword())
-                .pathURL("mobile/tasks/update?uid=" + uuidAsString)
-                .method(HTTPClient.METHOD_SEND.POST)
-                .callback(this);
-
-        ContentResolver contentResolver = getContext().getContentResolver();
-        for (Map.Entry<Integer, Uri> i : addedImages.entrySet()) {
-            try {
-                Uri uri = i.getValue();
-                String fileName = getFileName(uri, contentResolver);
-
-                InputStream inputStream = contentResolver.openInputStream(i.getValue());
-                byte[] data = HTTPClient.HTTPProcess.getBytes(inputStream);
-
-                HttpFile httpFile = new HttpFile();
-
-                httpFile.FileName = fileName;
-                httpFile.Name = fileName.substring(0, fileName.lastIndexOf((int) '.'));
-//                httpFile.Data = Base64.encode(data, Base64.DEFAULT);
-
-                // ТУТ ОПАСНОЕ МЕСТО ЧТО БЫ ЗАПУСКАТЬ В ОСНОВНОМ ПОТОКЕ
-                // НАДО ЗАПУСТИТЬ В ФОНОВОМ ПОТОКЕ
-                httpFile.Data = data;
-                httpFile.ContentDesposition = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
-                httpFile.ContentType = "Content-Type: image/jpeg";
-                client.addFile(httpFile);
-
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-
-
-        String stringJson = new GsonBuilder()
-                .setPrettyPrinting()
-                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-                .create()
-                .toJson(taskModel);
-
-        HttpFile objectJson = new HttpFile();
-        objectJson.ContentDesposition = "Content-Disposition: form-data; name=\"task\"";
-        objectJson.ContentType = "Content-Type: application/json; charset=UTF-8";
-        objectJson.Data = stringJson.getBytes(StandardCharsets.UTF_8);
-        client.addFile(objectJson);
-
-        client.build().setNameEvent("update").sendAsync();
-
+//        UUID uuid = UUID.randomUUID();
+//        String uuidAsString = uuid.toString().replace('-', '_');
+//        AuthRepository authRepository = AuthRepository.getInstance();
+//
+//        HTTPClient.Builder client = new HTTPClient.Builder(ModelContext.URLBase)
+//                .addHeader("Expires", "Mon, 26 Jul 1997 05:00:00 GMT")
+//                .addHeader("Cache-Control", "no-store, no-cache, must-revalidate")
+//                .addHeader("Cache-Control", "post-check=0, pre-check=0")
+//                .addHeader("Pragma", "no-cache")
+//                .authentication(authRepository.getUsername(), authRepository.getPassword())
+//                .pathURL("mobile/tasks/update?uid=" + uuidAsString)
+//                .method(HTTPClient.METHOD_SEND.POST)
+//                .callback(this);
+//
+//        ContentResolver contentResolver = getContext().getContentResolver();
+//        for (Map.Entry<Integer, Uri> i : addedImages.entrySet()) {
+//            try {
+//                Uri uri = i.getValue();
+//                String fileName = getFileName(uri, contentResolver);
+//
+//                InputStream inputStream = contentResolver.openInputStream(i.getValue());
+//                byte[] data = HTTPClient.HTTPProcess.getBytes(inputStream);
+//
+//                HttpFile httpFile = new HttpFile();
+//
+//                httpFile.FileName = fileName;
+//                httpFile.Name = fileName.substring(0, fileName.lastIndexOf((int) '.'));
+////                httpFile.Data = Base64.encode(data, Base64.DEFAULT);
+//
+//                // ТУТ ОПАСНОЕ МЕСТО ЧТО БЫ ЗАПУСКАТЬ В ОСНОВНОМ ПОТОКЕ
+//                // НАДО ЗАПУСТИТЬ В ФОНОВОМ ПОТОКЕ
+//                httpFile.Data = data;
+//                httpFile.ContentDesposition = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
+//                httpFile.ContentType = "Content-Type: image/jpeg";
+//                client.addFile(httpFile);
+//
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//
+//
+//        String stringJson = new GsonBuilder()
+//                .setPrettyPrinting()
+//                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
+//                .create()
+//                .toJson(taskModel);
+//
+//        HttpFile objectJson = new HttpFile();
+//        objectJson.ContentDesposition = "Content-Disposition: form-data; name=\"task\"";
+//        objectJson.ContentType = "Content-Type: application/json; charset=UTF-8";
+//        objectJson.Data = stringJson.getBytes(StandardCharsets.UTF_8);
+//        client.addFile(objectJson);
+//
+//        sendRequest = true;
+//
+//        client.build().setNameEvent("update").sendAsync();
     }
 
     @Override

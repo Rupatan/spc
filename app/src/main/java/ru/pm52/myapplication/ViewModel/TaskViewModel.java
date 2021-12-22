@@ -11,47 +11,53 @@ import androidx.core.content.FileProvider;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 import ru.pm52.myapplication.Model.TaskModel;
+import ru.pm52.myapplication.Model.TaskRepository;
 
 public class TaskViewModel extends ViewModelBase {
 
-    private MutableLiveData<TaskModel> task = new MutableLiveData<>();
-    public LiveData<TaskModel> Task = task;
+    public static final String EVENT_UPDATE = "update";
 
-    private HashMap<Integer, Uri> addedImages = new HashMap<>();
-    private Context context;
+    private final TaskRepository<TaskModel> taskRepository;
+    private final MutableLiveData<Boolean> isDone = new MutableLiveData<>();
+    public LiveData<Boolean> IsDone = isDone;
 
-    public TaskViewModel(Context context) {
-        this.context = context;
-    }
+    private final MutableLiveData<Boolean> isSend = new MutableLiveData<>();
+    public LiveData<Boolean> IsSend = isSend;
 
-    public void setTask(TaskModel taskModel) {
-        task.postValue(taskModel);
+    public TaskViewModel(TaskRepository<TaskModel> repository) {
+        this.taskRepository = repository;
+        taskRepository.addListener(this);
+        isSend.postValue(false);
     }
 
     public TaskModel getTaskModel() {
-        return task.getValue();
+        return taskRepository.getModel();
     }
 
-    public void setAddedImages(Integer id, Uri uri) {
-        this.addedImages.put(id, uri);
+    public void addImage(Integer id, Uri uri) {
+        taskRepository.addImage(id, uri);
     }
 
     public boolean deleteImage(int id) {
-        Uri uri = addedImages.get(id);
+        Uri uri = taskRepository.getImage(id);
         boolean fileRemoved = deleteImageForUri(uri);
         if (fileRemoved)
-            addedImages.remove(id);
+            taskRepository.deleteImage(id);
         return fileRemoved;
     }
 
-    public boolean deleteImage(Map.Entry<Integer, Uri> i) {
-        return deleteImage(i.getKey());
+    public void sendComplete() {
+        isSend.postValue(true);
+        taskRepository.sendComplete(EVENT_UPDATE);
     }
 
     public boolean deleteImageForUri(Uri uri) {
@@ -61,33 +67,36 @@ public class TaskViewModel extends ViewModelBase {
         return file.exists() && file.delete();
     }
 
-    public String getRealPathFromURI(Uri contentURI) {
-        String result;
-        Cursor cursor = context.getContentResolver().query(contentURI, null,
-                null, null, null);
-
-        if (cursor == null) { // Source is Dropbox or other similar local file
-            // path
-            result = contentURI.getPath();
-        } else {
-            cursor.moveToFirst();
-            try {
-                int idx = cursor
-                        .getColumnIndex(MediaStore.Images.ImageColumns.DATA);
-                result = cursor.getString(idx);
-            } catch (Exception e) {
-                result = "";
-            }
-            cursor.close();
-        }
-        return result;
+    public HashMap<Integer, Uri> getAddedImages() {
+        return null;
     }
 
     public void deleteImages() {
-        for (Map.Entry<Integer, Uri> i : addedImages.entrySet()) {
-            boolean fileDeleted = deleteImageForUri(i.getValue());
-            if (fileDeleted)
-                addedImages.remove(i.getKey());
+//        for (Map.Entry<Integer, Uri> i : addedImages.entrySet()) {
+//            boolean fileDeleted = deleteImageForUri(i.getValue());
+//            if (fileDeleted)
+//                addedImages.remove(i.getKey());
+//        }
+    }
+
+    @Override
+    public void NotifyResponse(String eventString, Object... params) {
+        if (eventString.equals(EVENT_UPDATE)) {
+            int code = (int) params[1];
+            if (code == 200) {
+                String content = String.valueOf(params[0]);
+                try {
+                    JSONObject jsonObject = new JSONObject(content);
+                    int status = jsonObject.getInt("status");
+                    isDone.postValue(status == 1);
+
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+
+            }
+            isSend.postValue(false);
         }
     }
+
 }
