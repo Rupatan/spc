@@ -3,6 +3,7 @@ package ru.pm52.myapplication.Model;
 import android.text.Editable;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -55,4 +56,13 @@ public class TaskModel implements Serializable {
 
     @SerializedName("ВидРаботы")
     public TypeWork TypeWork;
+
+    @SerializedName("ТочкаОбслуживания")
+    public String ServicePointId;
+
+    @SerializedName("ТочкаОбслуживанияПредставление")
+    public String ServicePointName;
+
+    @SerializedName("ТочкаОбслуживанияАдрес")
+    public String ServicePointAddress;
 }

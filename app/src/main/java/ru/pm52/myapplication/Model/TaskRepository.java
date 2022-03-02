@@ -5,6 +5,8 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
+
 import com.google.gson.GsonBuilder;
 
 import java.io.File;
@@ -47,6 +49,10 @@ public class TaskRepository <T> extends RepositoryBase implements INotify {
     }
 
     public void sendComplete(String nameEvent) {
+        sendComplete(nameEvent, this.taskModel);
+    }
+
+    public void sendComplete(String nameEvent, @NonNull T taskModel){
         UUID uuid = UUID.randomUUID();
         String uuidAsString = uuid.toString().replace('-', '_');
         AuthRepository authRepository = AuthRepository.getInstance();

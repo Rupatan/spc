@@ -6,6 +6,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.provider.MediaStore;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.FileProvider;
 import androidx.lifecycle.LiveData;
@@ -21,6 +22,7 @@ import java.util.Map;
 
 import ru.pm52.myapplication.Model.TaskModel;
 import ru.pm52.myapplication.Model.TaskRepository;
+import ru.pm52.myapplication.ResponseHTTPResult;
 
 public class TaskViewModel extends ViewModelBase {
 
@@ -32,6 +34,9 @@ public class TaskViewModel extends ViewModelBase {
 
     private final MutableLiveData<Boolean> isSend = new MutableLiveData<>();
     public LiveData<Boolean> IsSend = isSend;
+
+    private final MutableLiveData<ResponseHTTPResult> info = new MutableLiveData<>();
+    public LiveData<ResponseHTTPResult> Info = info;
 
     public TaskViewModel(TaskRepository<TaskModel> repository) {
         this.taskRepository = repository;
@@ -55,9 +60,10 @@ public class TaskViewModel extends ViewModelBase {
         return fileRemoved;
     }
 
-    public void sendComplete() {
+    public void sendComplete(@NonNull TaskModel taskModel) {
         isSend.postValue(true);
-        taskRepository.sendComplete(EVENT_UPDATE);
+        taskRepository.addListener(this, EVENT_UPDATE);
+        taskRepository.sendComplete(EVENT_UPDATE, taskModel);
     }
 
     public boolean deleteImageForUri(Uri uri) {
@@ -82,19 +88,28 @@ public class TaskViewModel extends ViewModelBase {
     @Override
     public void NotifyResponse(String eventString, Object... params) {
         if (eventString.equals(EVENT_UPDATE)) {
+            taskRepository.removeListener(this, EVENT_UPDATE);
             int code = (int) params[1];
+            int status = 0;
+            String info = "";
+            String content = "";
             if (code == 200) {
-                String content = String.valueOf(params[0]);
+                content = String.valueOf(params[0]);
                 try {
                     JSONObject jsonObject = new JSONObject(content);
-                    int status = jsonObject.getInt("status");
+                    status = jsonObject.getInt("status");
                     isDone.postValue(status == 1);
+                    info = jsonObject.getString("info");
 
                 } catch (JSONException e) {
                     e.printStackTrace();
+                    info = e.getMessage();
                 }
-
+            }else {
+                info = "Ошибка выполнения запроса";
             }
+            this.info.postValue(new ResponseHTTPResult(status, info, content, eventString));
+
             isSend.postValue(false);
         }
     }

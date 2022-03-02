@@ -71,6 +71,7 @@ public class RecycleViewAdapter
             b.Contact.setText(taskModel.Contact);
             b.Contragent.setText(taskModel.Contragent);
             b.Description.setText(taskModel.Descritpion);
+            b.ServicePoint.setText(taskModel.ServicePointAddress);
 
             Date date = new Date();
             if (date.getTime() >= taskModel.DatePerfomance.getTime()) {

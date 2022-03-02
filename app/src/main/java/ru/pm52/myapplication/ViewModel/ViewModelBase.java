@@ -40,5 +40,6 @@ public abstract class ViewModelBase extends ViewModel implements INotify {
 //        for (INotify iNotify : notifyList)
 //            iNotify.NotifyResponse();
     }
+
 }
 

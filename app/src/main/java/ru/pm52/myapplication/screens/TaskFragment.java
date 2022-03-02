@@ -97,6 +97,7 @@ import ru.pm52.myapplication.Model.ModelContext;
 import ru.pm52.myapplication.Model.TaskModel;
 import ru.pm52.myapplication.Model.TypeWork;
 import ru.pm52.myapplication.R;
+import ru.pm52.myapplication.ResponseHTTPResult;
 import ru.pm52.myapplication.ResponseResult;
 import ru.pm52.myapplication.ViewModel.Factory;
 import ru.pm52.myapplication.ViewModel.TaskViewModel;
@@ -182,7 +183,7 @@ public class TaskFragment extends FragmentBase {
         viewModel.IsDone.observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean isDone) {
-                if (isDone){
+                if (isDone) {
 
                 }
             }
@@ -190,10 +191,39 @@ public class TaskFragment extends FragmentBase {
         viewModel.IsSend.observe(getViewLifecycleOwner(), new Observer<Boolean>() {
             @Override
             public void onChanged(Boolean isSend) {
-                if (isSend){
+                if (isSend) {
                     binding.progressBarTask.setVisibility(View.VISIBLE);
                     binding.mtaskLayout.setVisibility(View.GONE);
-                }else{
+//                }else{
+//                    binding.progressBarTask.setVisibility(View.GONE);
+//                    binding.mtaskLayout.setVisibility(View.VISIBLE);
+                }
+            }
+        });
+        viewModel.Info.observe(getViewLifecycleOwner(), new Observer<ResponseHTTPResult>() {
+            @Override
+            public void onChanged(ResponseHTTPResult responseHTTPResult) {
+                String msg = "Ошибка выполнения задачи";
+                boolean isDone = false;
+                isDone = responseHTTPResult.Status == 1;
+                if (isDone) {
+                    msg = "Задача выполнена";
+                } else {
+                    msg = responseHTTPResult.Info;
+                    isDone = false;
+                }
+                Toast.makeText(getContext(), msg, Toast.LENGTH_LONG).show();
+
+                if (isDone) {
+                    viewModel.deleteImages();
+
+                    try {
+                        getParentFragmentManager().popBackStackImmediate();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+
+                } else {
                     binding.progressBarTask.setVisibility(View.GONE);
                     binding.mtaskLayout.setVisibility(View.VISIBLE);
                 }
@@ -208,7 +238,7 @@ public class TaskFragment extends FragmentBase {
             }
 
             sendRequest = savedInstanceState.getBoolean("sendRequest");
-            if (sendRequest){
+            if (sendRequest) {
                 binding.progressBarTask.setVisibility(View.GONE);
                 binding.mtaskLayout.setVisibility(View.VISIBLE);
             }
@@ -225,12 +255,9 @@ public class TaskFragment extends FragmentBase {
         binding.contact.setText(taskModel.Contact);
         binding.cotragent.setText(taskModel.Contragent);
         binding.Description.setText(taskModel.Descritpion);
-
+        binding.ServicePoint.setText(taskModel.ServicePointAddress);
         TypeWorkArrayAdapter adapter = new TypeWorkArrayAdapter(getContext());
         binding.typeWork.setAdapter(adapter);
-
-
-
         //binding.button2.setOnClickListener(this::onClickSendComplete);
 
         //viewModel.setTask(taskModel);
@@ -511,65 +538,7 @@ public class TaskFragment extends FragmentBase {
         taskModel.HaveTask = !taskModel.TextSubtask.trim().isEmpty();
         taskModel.TypeWork = (TypeWork) binding.typeWork.getSelectedItem();
 
-        viewModel.sendComplete();
-
-//        UUID uuid = UUID.randomUUID();
-//        String uuidAsString = uuid.toString().replace('-', '_');
-//        AuthRepository authRepository = AuthRepository.getInstance();
-//
-//        HTTPClient.Builder client = new HTTPClient.Builder(ModelContext.URLBase)
-//                .addHeader("Expires", "Mon, 26 Jul 1997 05:00:00 GMT")
-//                .addHeader("Cache-Control", "no-store, no-cache, must-revalidate")
-//                .addHeader("Cache-Control", "post-check=0, pre-check=0")
-//                .addHeader("Pragma", "no-cache")
-//                .authentication(authRepository.getUsername(), authRepository.getPassword())
-//                .pathURL("mobile/tasks/update?uid=" + uuidAsString)
-//                .method(HTTPClient.METHOD_SEND.POST)
-//                .callback(this);
-//
-//        ContentResolver contentResolver = getContext().getContentResolver();
-//        for (Map.Entry<Integer, Uri> i : addedImages.entrySet()) {
-//            try {
-//                Uri uri = i.getValue();
-//                String fileName = getFileName(uri, contentResolver);
-//
-//                InputStream inputStream = contentResolver.openInputStream(i.getValue());
-//                byte[] data = HTTPClient.HTTPProcess.getBytes(inputStream);
-//
-//                HttpFile httpFile = new HttpFile();
-//
-//                httpFile.FileName = fileName;
-//                httpFile.Name = fileName.substring(0, fileName.lastIndexOf((int) '.'));
-////                httpFile.Data = Base64.encode(data, Base64.DEFAULT);
-//
-//                // ТУТ ОПАСНОЕ МЕСТО ЧТО БЫ ЗАПУСКАТЬ В ОСНОВНОМ ПОТОКЕ
-//                // НАДО ЗАПУСТИТЬ В ФОНОВОМ ПОТОКЕ
-//                httpFile.Data = data;
-//                httpFile.ContentDesposition = String.format("Content-Disposition: name=\"%1$s\"; filename=\"%2$s\"", httpFile.Name, httpFile.FileName);
-//                httpFile.ContentType = "Content-Type: image/jpeg";
-//                client.addFile(httpFile);
-//
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//
-//
-//        String stringJson = new GsonBuilder()
-//                .setPrettyPrinting()
-//                .setDateFormat("yyyy-MM-dd'T'HH:mm:ss")
-//                .create()
-//                .toJson(taskModel);
-//
-//        HttpFile objectJson = new HttpFile();
-//        objectJson.ContentDesposition = "Content-Disposition: form-data; name=\"task\"";
-//        objectJson.ContentType = "Content-Type: application/json; charset=UTF-8";
-//        objectJson.Data = stringJson.getBytes(StandardCharsets.UTF_8);
-//        client.addFile(objectJson);
-//
-//        sendRequest = true;
-//
-//        client.build().setNameEvent("update").sendAsync();
+        viewModel.sendComplete(taskModel);
     }
 
     @Override
